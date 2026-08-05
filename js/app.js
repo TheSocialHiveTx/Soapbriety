@@ -212,31 +212,39 @@ function renderNavbar() {
     <span style="color:#F5F2EB">Every Bar Funds Recovery at <strong>The Wheelhouse</strong></span>
   </div>
   <div class="navbar-inner">
-    <button class="mobile-menu-btn" onclick="toggleMobileMenu()" id="mobile-menu-btn">${ICONS.menu}</button>
-    <a href="#" class="nav-logo" onclick="navigate('home');return false;">
-      ${WORDMARK_SKULL}
-      <div class="nav-logo-text">
-        <span class="nav-logo-title">SOAPBRIETY</span>
-        <span class="nav-logo-sub">FROTHY AF • FRESH START</span>
-      </div>
+    <div class="nav-side nav-left">
+      <button class="mobile-menu-btn" onclick="toggleMobileMenu()" id="mobile-menu-btn">${ICONS.menu}</button>
+      <nav class="nav-links-desktop">
+        <button class="nav-link ${state.currentPage==='shop'?'active':''}" onclick="navigate('shop')">Shop</button>
+        <button class="nav-link ${state.currentPage==='story'?'active':''}" onclick="navigate('story')">Our Story</button>
+        <button class="nav-link ${state.currentPage==='wheelhouse'?'active':''}" onclick="navigate('wheelhouse')">The Wheelhouse</button>
+      </nav>
+    </div>
+
+    <a href="#" class="nav-logo-center" onclick="navigate('home');return false;">
+      <img src="images/Soaplogo.png" alt="Soapbriety Logo">
     </a>
-    <nav class="nav-links">
-      ${pages.slice(1).map(p => `<button class="nav-link ${state.currentPage===p.id?'active':''}" onclick="navigate('${p.id}')">${p.label}</button>`).join('')}
-      <div class="nav-dropdown">
-        <button class="nav-dropdown-btn">More <span style="font-size:.5625rem;opacity:.7">▼</span></button>
-        <div class="nav-dropdown-menu">
-          ${more.map(p=>`<button class="nav-dropdown-item ${state.currentPage===p.id?'active':''}" onclick="navigate('${p.id}')">${p.label}</button>`).join('')}
+
+    <div class="nav-side nav-right">
+      <nav class="nav-links-desktop">
+        <button class="nav-link ${state.currentPage==='impact'?'active':''}" onclick="navigate('impact')">Impact</button>
+        <button class="nav-link ${state.currentPage==='journal'?'active':''}" onclick="navigate('journal')">Journal</button>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-btn">More <span style="font-size:.5625rem;opacity:.7">▼</span></button>
+          <div class="nav-dropdown-menu">
+            ${more.map(p=>`<button class="nav-dropdown-item ${state.currentPage===p.id?'active':''}" onclick="navigate('${p.id}')">${p.label}</button>`).join('')}
+          </div>
         </div>
+      </nav>
+      <div class="nav-actions">
+        <button class="nav-icon-btn" onclick="openSearch()" title="Search Products">${ICONS.search}</button>
+        <button class="nav-icon-btn lg-hide" style="display:none;" onclick="navigate('wholesale')">${ICONS.sparkles}</button>
+        <button class="nav-cart-btn" onclick="openCart()">
+          ${ICONS.shoppingBag}
+          <span class="hide-mobile">Cart</span>
+          ${cartCount()>0?`<span class="cart-count">${cartCount()}</span>`:''}
+        </button>
       </div>
-    </nav>
-    <div class="nav-actions">
-      <button class="nav-icon-btn" onclick="openSearch()" title="Search Products">${ICONS.search}</button>
-      <button class="nav-icon-btn lg-hide" style="display:none;" onclick="navigate('wholesale')">${ICONS.sparkles}</button>
-      <button class="nav-cart-btn" onclick="openCart()">
-        ${ICONS.shoppingBag}
-        <span class="hide-mobile">Cart</span>
-        ${cartCount()>0?`<span class="cart-count">${cartCount()}</span>`:''}
-      </button>
     </div>
   </div>
   <div class="mobile-menu" id="mobile-menu">
@@ -353,7 +361,7 @@ function renderHomePage() {
       <div class="card-dark" style="padding:3rem 2rem;">
         <div class="why-grid">
           <div class="why-img-wrap">
-            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1000&q=80" alt="Founder DJ">
+            <img src="images/David.png" alt="Founder DJ">
             <div class="why-img-caption">
               <span class="caption-label">FOUNDER • DJ</span>
               <span class="caption-name">Clean &amp; Sober since April 20, 2023</span>
@@ -715,7 +723,7 @@ function renderStoryPage() {
       </div>
       <div style="display:flex;flex-direction:column;gap:4rem;">
         <div class="chapter-grid">
-          <div class="chapter-img"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80" alt="DJ founder story"></div>
+          <div class="chapter-img"><img src="images/David.png" alt="DJ founder story"></div>
           <div style="display:flex;flex-direction:column;gap:1rem;">
             <span class="chapter-num" style="color:var(--copper);">CHAPTER ONE</span>
             <div class="chapter-title">My Rock Bottom: April 20, 2023</div>
