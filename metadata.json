@@ -1,0 +1,6 @@
+{
+  "name": "Soapbriety",
+  "description": "More Than Soap. A Fresh Start. Premium handcrafted soap funding recovery initiatives and community outreach through The Wheelhouse.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
