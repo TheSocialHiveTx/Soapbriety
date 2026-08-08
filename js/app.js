@@ -51,9 +51,11 @@ function icon(name, cls='') {
 }
 
 /* ── App State ── */
+var SHOP_PRODUCTS = []; // Populated from Shopify or fallback
+var _cartBusy = false;  // Prevents double-submit
+
 const state = {
   currentPage: 'home',
-  cart: loadCart(),
   cartOpen: false,
   searchOpen: false,
   quickViewProduct: null,
@@ -61,14 +63,6 @@ const state = {
   toastTimeout: null,
 };
 
-function loadCart() {
-  try { return JSON.parse(localStorage.getItem('soapbriety_cart') || '[]'); }
-  catch { return []; }
-}
-function saveCart() {
-  try { localStorage.setItem('soapbriety_cart', JSON.stringify(state.cart)); }
-  catch {}
-}
 
 /* ── Navigation ── */
 function navigate(page) {
@@ -77,67 +71,71 @@ function navigate(page) {
   renderApp();
 }
 
-/* ── Cart operations ── */
-function addToCart(productId, isSubscription=false) {
-  const product = PRODUCTS.find(p => p.id === productId);
-  if (!product) return;
-  const existing = state.cart.find(i => i.productId === productId);
-  if (existing) {
-    existing.quantity += 1;
-    if (isSubscription) existing.isSubscription = true;
+/* ── Cart operations (Shopify Storefront Cart API) ── */
+async function addToCart(variantIdOrProductId, quantity) {
+  if (_cartBusy) return;
+  _cartBusy = true;
+
+  // Resolve the merchandiseId (variant ID)
+  var merchandiseId = null;
+  var productTitle = '';
+  var product = SHOP_PRODUCTS.find(function(p) { return p.id === variantIdOrProductId || p.handle === variantIdOrProductId; });
+  if (product) {
+    merchandiseId = product.defaultVariantId;
+    productTitle = product.title;
   } else {
-    state.cart.push({ productId, quantity: 1, isSubscription });
+    // Might already be a variant ID
+    merchandiseId = variantIdOrProductId;
+    // Try to find product title
+    SHOP_PRODUCTS.forEach(function(p) {
+      p.variants.forEach(function(v) {
+        if (v.id === variantIdOrProductId) { productTitle = p.title; }
+      });
+    });
   }
-  saveCart();
-  showToast(`Added ${product.name} to cart (+${product.impactHours}h Wheelhouse impact)`);
-  state.cartOpen = true;
-  renderApp();
+
+  if (!merchandiseId) { _cartBusy = false; return; }
+
+  var result = await shopifyCartAdd(merchandiseId, quantity || 1);
+  _cartBusy = false;
+
+  if (result.cart) {
+    showToast('Added ' + (productTitle || 'item') + ' to cart');
+    state.cartOpen = true;
+    renderApp();
+  } else {
+    var errMsg = (result.errors && result.errors[0]) ? result.errors[0].message : 'Could not add to cart.';
+    showToast(errMsg);
+  }
 }
 
-function removeFromCart(productId) {
-  state.cart = state.cart.filter(i => i.productId !== productId);
-  saveCart();
-  renderApp();
+async function removeFromCart(lineId) {
+  if (_cartBusy) return;
+  _cartBusy = true;
+  var result = await shopifyCartRemoveLine(lineId);
+  _cartBusy = false;
+  if (result.cart) { renderApp(); }
+  else { showToast('Could not remove item. Please try again.'); }
 }
 
-function updateQuantity(productId, quantity) {
-  if (quantity <= 0) { removeFromCart(productId); return; }
-  const item = state.cart.find(i => i.productId === productId);
-  if (item) item.quantity = quantity;
-  saveCart();
-  renderApp();
-}
-
-function toggleSubscription(productId, sub) {
-  const item = state.cart.find(i => i.productId === productId);
-  if (item) { item.isSubscription = sub; saveCart(); renderApp(); }
-}
-
-function clearCart() {
-  state.cart = [];
-  saveCart();
-  renderApp();
+async function updateQuantity(lineId, newQuantity) {
+  if (_cartBusy) return;
+  if (newQuantity <= 0) { await removeFromCart(lineId); return; }
+  _cartBusy = true;
+  var result = await shopifyCartUpdateLine(lineId, newQuantity);
+  _cartBusy = false;
+  if (result.cart) { renderApp(); }
+  else { showToast('Could not update quantity. Please try again.'); }
 }
 
 function cartTotal() {
-  return state.cart.reduce((acc, item) => {
-    const p = PRODUCTS.find(x => x.id === item.productId);
-    if (!p) return acc;
-    const price = item.isSubscription ? p.price * 0.85 : p.price;
-    return acc + price * item.quantity;
-  }, 0);
+  return shopifyCartSubtotal();
 }
 
 function cartCount() {
-  return state.cart.reduce((acc, i) => acc + i.quantity, 0);
+  return shopifyCartTotalQuantity();
 }
 
-function cartImpactHours() {
-  return state.cart.reduce((acc, item) => {
-    const p = PRODUCTS.find(x => x.id === item.productId);
-    return acc + (p ? p.impactHours * item.quantity : 0);
-  }, 0);
-}
 
 /* ── Toast ── */
 function showToast(msg) {
@@ -195,9 +193,7 @@ function renderNavbar() {
     { id:'home', label:'Home' },
     { id:'shop', label:'Shop' },
     { id:'story', label:'Our Story' },
-    { id:'wheelhouse', label:'The Wheelhouse' },
-    { id:'impact', label:'Impact' },
-    { id:'journal', label:'Journal' },
+    { id:'wheelhouse', label:'The Wheelhouse' }
   ];
   const more = [
     { id:'wholesale', label:'Wholesale' },
@@ -222,19 +218,14 @@ function renderNavbar() {
     </div>
 
     <a href="#" class="nav-logo-center" onclick="navigate('home');return false;">
-      <img src="images/Soaplogo.png" alt="Soapbriety Logo">
+      <img src="images/SIAP LOGO.png" alt="Soapbriety Logo">
     </a>
 
     <div class="nav-side nav-right">
       <nav class="nav-links-desktop">
-        <button class="nav-link ${state.currentPage==='impact'?'active':''}" onclick="navigate('impact')">Impact</button>
-        <button class="nav-link ${state.currentPage==='journal'?'active':''}" onclick="navigate('journal')">Journal</button>
-        <div class="nav-dropdown">
-          <button class="nav-dropdown-btn">More <span style="font-size:.5625rem;opacity:.7">▼</span></button>
-          <div class="nav-dropdown-menu">
-            ${more.map(p=>`<button class="nav-dropdown-item ${state.currentPage===p.id?'active':''}" onclick="navigate('${p.id}')">${p.label}</button>`).join('')}
-          </div>
-        </div>
+        <button class="nav-link ${state.currentPage==='wholesale'?'active':''}" onclick="navigate('wholesale')">Wholesale</button>
+        <button class="nav-link ${state.currentPage==='faq'?'active':''}" onclick="navigate('faq')">FAQ</button>
+        <button class="nav-link ${state.currentPage==='contact'?'active':''}" onclick="navigate('contact')">Contact</button>
       </nav>
       <div class="nav-actions">
         <button class="nav-icon-btn" onclick="openSearch()" title="Search Products">${ICONS.search}</button>
@@ -273,57 +264,62 @@ function closeMobileMenu() {
 
 /* ── Product Card HTML ── */
 function productCardHTML(product) {
+  var img0 = product.images[0] || product.featuredImage || '';
+  var img1 = product.images[1] || img0;
+  var price = product.price;
+  var compareAt = product.compareAtPrice;
+  var soldOut = !product.availableForSale;
+  var variantId = product.defaultVariantId || product.id;
+
   return `
-  <div class="product-card">
-    <div class="product-img-wrap" onclick="openQuickView('${product.id}')">
-      <img src="${product.images[0]}" alt="${product.name}" loading="lazy"
-           onmouseover="this.src='${product.images[1]||product.images[0]}'"
-           onmouseout="this.src='${product.images[0]}'">
+  <div class="product-card${soldOut ? ' sold-out' : ''}">
+    <div class="product-img-wrap" onclick="openQuickView('${product.handle || product.id}')">
+      <img src="${img0}" alt="${product.title}" loading="lazy"
+           onmouseover="this.src='${img1}'"
+           onmouseout="this.src='${img0}'">
       <div class="product-badges">
         <div style="display:flex;flex-direction:column;gap:.25rem;">
-          ${product.isBestSeller?`<span class="product-badge-bs">BEST SELLER</span>`:''}
-          ${product.isLimited?`<span class="product-badge-ltd">LIMITED RELEASE</span>`:''}
+          ${(product.tags && product.tags.indexOf('best-seller') >= 0) ? '<span class="product-badge-bs">BEST SELLER</span>' : ''}
+          ${soldOut ? '<span class="product-badge-ltd" style="background:var(--red);color:#fff;">SOLD OUT</span>' : ''}
+          ${(compareAt && compareAt > price) ? '<span class="product-badge-ltd" style="background:var(--copper);">SALE</span>' : ''}
         </div>
-        <span class="product-badge-hrs">${ICONS.clock}+${product.impactHours}h Wheelhouse</span>
       </div>
       <div class="product-hover-actions">
-        <button class="hover-quick-view" onclick="event.stopPropagation();openQuickView('${product.id}')" title="Quick View">${ICONS.eye}</button>
-        <button class="hover-add" onclick="event.stopPropagation();addToCart('${product.id}')">${ICONS.shoppingBag} Quick Add</button>
+        <button class="hover-quick-view" onclick="event.stopPropagation();openQuickView('${product.handle || product.id}')" title="Quick View">${ICONS.eye}</button>
+        ${soldOut ? '' : '<button class="hover-add" onclick="event.stopPropagation();addToCart(\'' + variantId + '\')">' + ICONS.shoppingBag + ' Quick Add</button>'}
       </div>
     </div>
     <div class="product-body">
       <div class="product-meta">
-        <span class="product-cat">${product.category}</span>
-        <span class="product-intensity">${product.scentProfile.intensity} Fragrance</span>
+        <span class="product-cat">${product.productType || ''}</span>
       </div>
       <div>
-        <div class="product-name" onclick="openQuickView('${product.id}')">${product.name}</div>
-        <p class="product-subtitle line-clamp-1">${product.subtitle}</p>
-      </div>
-      <div class="product-scents">
-        ${product.scentProfile.top.map(n=>`<span class="scent-tag">🌿 ${n}</span>`).join('')}
+        <div class="product-name" onclick="openQuickView('${product.handle || product.id}')">${product.title}</div>
+        <p class="product-subtitle line-clamp-1">${product.description ? product.description.substring(0, 80) : ''}</p>
       </div>
       <div class="product-footer">
-        <div class="product-rating">
-          <span class="star-icon" style="color:var(--amber)">★</span>
-          <span class="rating-score">${product.rating.toFixed(2)}</span>
-          <span class="rating-count">(${product.reviewCount})</span>
-        </div>
-        <span class="product-price">$${product.price.toFixed(2)}</span>
+        <div class="product-rating"></div>
+        <span class="product-price">
+          ${(compareAt && compareAt > price) ? '<span style="text-decoration:line-through;color:var(--muted-dk);margin-right:.375rem;">' + formatMoney(compareAt, product.currencyCode) + '</span>' : ''}
+          ${formatMoney(price, product.currencyCode)}
+        </span>
       </div>
-      <button class="product-atc" onclick="addToCart('${product.id}')">${ICONS.shoppingBag} Add To Cart • $${product.price.toFixed(2)}</button>
+      ${soldOut
+        ? '<button class="product-atc" disabled style="opacity:.5;cursor:not-allowed;">' + ICONS.shoppingBag + ' Sold Out</button>'
+        : '<button class="product-atc" onclick="addToCart(\'' + variantId + '\')">'
+          + ICONS.shoppingBag + ' Add To Cart • ' + formatMoney(price, product.currencyCode) + '</button>'}
     </div>
   </div>`;
 }
 
 /* ── HOME PAGE ── */
 function renderHomePage() {
-  const featuredProducts = PRODUCTS.slice(0, 6);
+  const featuredProducts = SHOP_PRODUCTS.slice(0, 6);
   return `
   <!-- HERO -->
   <section class="hero">
     <div class="hero-bg">
-      <img class="hero-img" src="https://images.unsplash.com/photo-1607006482172-3ba98971f165?auto=format&fit=crop&w=2000&q=80" alt="Cold process soap pouring">
+      <img class="hero-img" src="gallery/c282a4c6-3cbc-4aa6-8abf-e4bce0e6e0c2.jpg" alt="Cold process soap pouring">
       <div class="hero-overlay-grad"></div>
       <div class="hero-dot-grid"></div>
     </div>
@@ -395,7 +391,7 @@ function renderHomePage() {
       </div>
       <div class="grid grid-3" style="gap:1.5rem;">
         <div class="collection-card" onclick="navigate('shop')">
-          <img src="https://images.unsplash.com/photo-1607006482172-3ba98971f165?auto=format&fit=crop&w=800&q=80" alt="Best Sellers">
+          <img src="gallery/3ada57e8-5227-4e4d-9ec3-ce7070a86040.jpg" alt="Best Sellers">
           <div class="collection-grad"></div>
           <div class="collection-info">
             <span class="coll-badge coll-badge-copper">BEST SELLERS</span>
@@ -404,7 +400,7 @@ function renderHomePage() {
           </div>
         </div>
         <div class="collection-card" onclick="navigate('shop')">
-          <img src="https://images.unsplash.com/photo-1617897903246-719242758050?auto=format&fit=crop&w=800&q=80" alt="Fruit Collection">
+          <img src="gallery/dd166f18-136f-47a0-93e1-c56a675f3e7b.jpg" alt="Fruit Collection">
           <div class="collection-grad"></div>
           <div class="collection-info">
             <span class="coll-badge coll-badge-green">FRUIT COLLECTION</span>
@@ -413,7 +409,7 @@ function renderHomePage() {
           </div>
         </div>
         <div class="collection-card" onclick="navigate('shop')">
-          <img src="https://images.unsplash.com/photo-1546554137-f86b9593a222?auto=format&fit=crop&w=800&q=80" alt="Gift Boxes">
+          <img src="gallery/ba33da71-ce16-4a14-8025-bb2adec42823.jpg" alt="Gift Boxes">
           <div class="collection-grad"></div>
           <div class="collection-info">
             <span class="coll-badge coll-badge-white">GIFT SETS &amp; CRATES</span>
@@ -440,33 +436,6 @@ function renderHomePage() {
       </div>
     </div>
 
-    <!-- IMPACT ENGINE -->
-    <div class="section">
-      <div class="card-dark" style="padding:3rem 2rem;">
-        <div style="text-align:center;max-width:36rem;margin:0 auto 3rem;display:flex;flex-direction:column;gap:.75rem;">
-          <span class="section-eyebrow">TRANSPARENT COMMUNITY REINVESTMENT</span>
-          <div class="section-title">The Soapbriety Impact Engine</div>
-          <p style="font-size:.875rem;color:var(--muted);">Every bar you buy creates a direct ripple effect through recovery initiatives and community outreach at The Wheelhouse.</p>
-        </div>
-        <div class="grid grid-4" style="gap:1.5rem;margin-bottom:2rem;">
-          <div class="impact-step"><div class="step-num" style="color:var(--green)">01</div><div class="step-title">You Buy Soap</div><p class="step-desc">You receive handcrafted cold-process bars brewed with raw ingredients.</p></div>
-          <div class="impact-step"><div class="step-num" style="color:var(--copper)">02</div><div class="step-title">Proceeds Fund Wheelhouse</div><p class="step-desc">Fixed profits directly sponsor community recovery space facilities.</p></div>
-          <div class="impact-step"><div class="step-num" style="color:var(--green-lt)">03</div><div class="step-title">Weekly Peer Circles</div><p class="step-desc">Free weekly mentorship, hot meals, and hygiene outreach hosted.</p></div>
-          <div class="impact-step"><div class="step-num" style="color:var(--cream)">04</div><div class="step-title">Lives Restored</div><p class="step-desc">Real individuals get second chances to rebuild themselves with dignity.</p></div>
-        </div>
-        <div class="grid grid-4" style="gap:1rem;padding-top:1.5rem;border-top:1px solid #1C281F;">
-          <div class="stat-block"><div class="stat-num" style="color:var(--green)">${IMPACT_STATS.barsSold.toLocaleString()}+</div><div class="stat-label">Handcrafted Bars Sold</div></div>
-          <div class="stat-block"><div class="stat-num" style="color:var(--copper)">$${IMPACT_STATS.moneyDonated.toLocaleString()}+</div><div class="stat-label">Funded to The Wheelhouse</div></div>
-          <div class="stat-block"><div class="stat-num" style="color:var(--green-lt)">${IMPACT_STATS.eventsFunded}+</div><div class="stat-label">Sober Events &amp; Circles</div></div>
-          <div class="stat-block"><div class="stat-num" style="color:var(--cream)">${IMPACT_STATS.volunteerHours.toLocaleString()}+</div><div class="stat-label">Community Volunteer Hours</div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- IMPACT CALCULATOR -->
-    <div class="section">
-      ${renderImpactCalculator()}
-    </div>
 
     <!-- TIMELINE -->
     <div class="section">
@@ -556,7 +525,7 @@ function reviewCardHTML(r) {
 function filterHomeProducts(tab, btn) {
   document.querySelectorAll('#home-tabs .tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  const filtered = tab === 'All' ? PRODUCTS : PRODUCTS.filter(p => p.category === tab);
+  const filtered = tab === 'All' ? SHOP_PRODUCTS : SHOP_PRODUCTS.filter(p => (p.productType || '').toLowerCase() === tab.toLowerCase() || (p.tags && p.tags.indexOf(tab.toLowerCase().replace(/ /g,'-')) >= 0));
   document.getElementById('home-products-grid').innerHTML = filtered.slice(0,6).map(productCardHTML).join('');
 }
 
@@ -676,16 +645,15 @@ function renderShopPage() {
 }
 
 function renderShopGrid() {
-  let filtered = PRODUCTS.filter(p => {
-    const mCat = shopState.cat === 'All' || p.category === shopState.cat;
-    const mInt = shopState.intensity === 'All' || p.scentProfile.intensity === shopState.intensity;
+  let filtered = SHOP_PRODUCTS.filter(p => {
+    const mCat = shopState.cat === 'All' || (p.productType || '').toLowerCase() === shopState.cat.toLowerCase();
+    const mInt = shopState.intensity === 'All'; // Intensity filter not applicable for Shopify products
     const q = shopState.q.toLowerCase();
-    const mQ = !q || p.name.toLowerCase().includes(q) || p.subtitle.toLowerCase().includes(q) || p.ingredients.some(i=>i.toLowerCase().includes(q));
+    const mQ = !q || p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) || (p.tags && p.tags.some(function(t) { return t.toLowerCase().includes(q); }));
     return mCat && mInt && mQ;
   });
   if (shopState.sort === 'price-low') filtered.sort((a,b)=>a.price-b.price);
   else if (shopState.sort === 'price-high') filtered.sort((a,b)=>b.price-a.price);
-  else if (shopState.sort === 'rating') filtered.sort((a,b)=>b.rating-a.rating);
 
   if (!filtered.length) return `
     <div style="padding:5rem 1rem;text-align:center;background:#0F1311;border-radius:1.5rem;border:1px solid #202A23;">
@@ -721,30 +689,18 @@ function renderStoryPage() {
         <h1 style="font-family:var(--font-serif);font-weight:900;font-size:clamp(2rem,6vw,3.5rem);color:var(--cream);text-transform:uppercase;line-height:1.05;">Washing Away Yesterday. <br><span style="color:var(--copper);">Choosing To Move Forward.</span></h1>
         <p style="font-size:1rem;color:var(--muted);line-height:1.7;">The true story of how a morning wash basin on April 20, 2023 sparked a nationwide movement centered around recovery, discipline, and second chances.</p>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4rem;">
-        <div class="chapter-grid">
-          <div class="chapter-img"><img src="images/David.png" alt="DJ founder story"></div>
-          <div style="display:flex;flex-direction:column;gap:1rem;">
-            <span class="chapter-num" style="color:var(--copper);">CHAPTER ONE</span>
-            <div class="chapter-title">My Rock Bottom: April 20, 2023</div>
-            <p class="chapter-text">For years, addiction ran the show. It eroded my physical health, alienated the people I loved, and left me spiritually bankrupt. On the morning of April 20, 2023, I hit a rock bottom that left no room for denial. I walked to the bathroom sink, turned the cold water handle, and washed my face. Staring at my reflection, I made one absolute commitment: I will not surrender today.</p>
-          </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:4rem;align-items:start;">
+        <div style="position:relative;border-radius:1.5rem;overflow:hidden;box-shadow:0 25px 50px rgba(0,0,0,.5);">
+          <img src="images/David.png" alt="DJ founder story" style="width:100%;height:auto;display:block;filter:brightness(.9);">
         </div>
-        <div class="chapter-grid reversed">
-          <div class="chapter-text-col" style="display:flex;flex-direction:column;gap:1rem;">
-            <span class="chapter-num" style="color:var(--green);">CHAPTER TWO</span>
-            <div class="chapter-title">Finding Purpose In Discipline</div>
-            <p class="chapter-text">Early recovery demands routine. You need physical anchors that reinforce your decision to stay clean. I discovered cold-process soapmaking during my early months of sobriety. Saponifying oils, measuring essential botanicals, and letting soap cure for 6 weeks required exact patience and discipline—the exact qualities required to maintain sobriety.</p>
-          </div>
-          <div class="chapter-img"><img src="https://images.unsplash.com/photo-1607006482172-3ba98971f165?auto=format&fit=crop&w=800&q=80" alt="Cold process soapmaking"></div>
-        </div>
-        <div class="chapter-grid">
-          <div class="chapter-img"><img src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=800&q=80" alt="The Wheelhouse"></div>
-          <div style="display:flex;flex-direction:column;gap:1rem;">
-            <span class="chapter-num" style="color:var(--green-lt);">CHAPTER THREE</span>
-            <div class="chapter-title">Funding The Wheelhouse &amp; Giving Back</div>
-            <p class="chapter-text">Soapbriety was never meant to be a simple e-commerce store. From day one, we pledged our profits to fund <strong style="color:var(--cream)">The Wheelhouse</strong>—our community recovery center. Today, every bar sold directly sponsors peer support circles, weekly hot meals, hygiene kits, and emergency transit passes for people trying to get clean.</p>
-          </div>
+        <div style="display:flex;flex-direction:column;gap:1.5rem;color:var(--muted);line-height:1.8;font-size:1.125rem;">
+          <h2 style="font-family:var(--font-serif);font-weight:900;font-size:2.5rem;color:var(--cream);line-height:1.1;margin-bottom:1rem;">What it do players.</h2>
+          <p>For years, addiction ran my life, and my biggest problem was that I always found a way to make everything about me. I was trapped in a destructive cycle where I couldn't stop once I started, and I couldn't keep myself from starting again. I was constantly hurting myself and everyone around me.</p>
+          <p>Hitting my rock bottom on April 20, 2023, meant finally getting tired of the pain. My life shifted completely when I surrendered, found God, and stepped into fellowship. It was deeply uncomfortable, but it taught me early on that there is no real growth in comfort. To recover, I had to learn how to get out of my own head and practice quiet, daily acts of selflessness.</p>
+          <p>Moving away from a mindset where I took everything and left others with nothing, I found a new purpose in serving people. In October 2023, six months into my sobriety, I launched Soapbriety. Since I've always been a frothy individual, really the frothiest guy in the room, selling soap felt like the perfect vehicle to build a movement.</p>
+          <p>But this brand was never just about soap. It became my way to pay it forward and give back to God, AA, and The Wheelhouse for giving me a second chance at life. You can either see a message or be the message, and I'm doing everything in my power to live out that message every day to make my family and friends proud.</p>
+          <p>Looking ahead, I don't need to force my own agenda anymore. My plan for the future is simple: less of my will, and more of His. Thank you for being a part of this journey with me.</p>
+          <div style="margin-top:1rem;font-family:var(--font-serif);font-weight:900;font-size:1.5rem;color:var(--copper);">Stay Frothy AF, <br><span style="color:var(--cream);">DJ</span></div>
         </div>
       </div>
       <div style="padding:3rem 2rem;border-radius:1.5rem;background:linear-gradient(to right,#17261B,#101812,#1E1611);border:1px solid #2E4535;text-align:center;display:flex;flex-direction:column;align-items:center;gap:1rem;box-shadow:0 25px 50px rgba(0,0,0,.5);">
@@ -768,36 +724,13 @@ function renderWheelhousePage() {
       <div style="border-radius:1.5rem;background:linear-gradient(to right,#17291D,#0E1711,#1C1510);border:1px solid #2B4232;padding:3rem 2rem;">
         <div class="badge-pill badge-green" style="display:inline-flex;margin-bottom:1rem;">${ICONS.heartHandshake} THE WHEELHOUSE RECOVERY COMMUNITY CENTER</div>
         <h1 style="font-family:var(--font-serif);font-weight:900;font-size:clamp(1.875rem,5vw,3rem);color:var(--cream);margin-bottom:1rem;">Where Fresh Starts Take Root</h1>
-        <p style="font-size:1rem;color:var(--muted);line-height:1.7;max-width:48rem;">The Wheelhouse is a non-profit community recovery space funded directly by Soapbriety purchases. We provide free peer support circles, weekly fellowship dinners, crisis intervention transit passes, and volunteer opportunities for anyone rebuilding their life.</p>
+        <p style="font-size:1rem;color:var(--muted);line-height:1.7;max-width:48rem;">The Wheelhouse is a non-profit community recovery space supported by Soapbriety. We provide a safe environment and fellowship for anyone working on rebuilding their life.</p>
       </div>
       <div>
-        <h2 class="section-title" style="margin-bottom:1.5rem;">Wheelhouse Core Recovery Initiatives</h2>
-        <div class="grid grid-3" style="gap:1.5rem;">
-          <div class="program-card"><span style="color:var(--green)">${ICONS.users}</span><div class="program-title">Weekly Peer Support Circles</div><p class="program-desc">Safe, judgment-free group circles facilitated by trained peers in long-term recovery. Hosted 5 nights a week.</p></div>
-          <div class="program-card"><span style="color:var(--copper)">${ICONS.utensils}</span><div class="program-title">Friday Night Fellowship Dinners</div><p class="program-desc">Complimentary hot meals served every Friday night to foster community connection and fight social isolation.</p></div>
-          <div class="program-card"><span style="color:var(--green-lt)">${ICONS.shieldCheck}</span><div class="program-title">Hygiene &amp; Shelter Transit Packs</div><p class="program-desc">Distributing essential cold-process soaps, dental care, and bus passes to local recovery transition houses.</p></div>
-        </div>
-      </div>
-      <div>
-        <div class="section-header" style="margin-bottom:1.5rem;">
-          <div><span class="section-eyebrow">COMMUNITY CALENDAR</span><div class="section-title">Upcoming Wheelhouse Events</div></div>
-        </div>
-        <div class="grid grid-3" style="gap:1.5rem;">
-          ${EVENTS.map(e=>`
-          <div class="event-card">
-            <div class="event-img-wrap"><img src="${e.image}" alt="${e.title}"><span class="event-cat-badge">${e.category}</span></div>
-            <div class="event-body">
-              <div>
-                <div class="event-title">${e.title}</div>
-                <p class="event-desc line-clamp-3">${e.description}</p>
-              </div>
-              <div class="event-meta">
-                <div class="event-meta-row" style="color:var(--cream);">${ICONS.calendar} <span>${e.date} • ${e.time}</span></div>
-                <div class="event-meta-row">${ICONS.mapPin} <span>${e.location}</span></div>
-                <div style="color:var(--green-lt);padding-top:.25rem;">👥 ${e.attendeesCount} Community Members Registered</div>
-              </div>
-            </div>
-          </div>`).join('')}
+        <h2 class="section-title" style="margin-bottom:1.5rem;">The Wheelhouse Community Center</h2>
+        <div class="grid grid-2" style="gap:1.5rem;">
+          <div class="program-card"><span style="color:var(--green)">${ICONS.users}</span><div class="program-title">A Safe Space</div><p class="program-desc">The Wheelhouse provides a secure, judgment-free environment for individuals focused on personal recovery and community support.</p></div>
+          <div class="program-card"><span style="color:var(--copper)">${ICONS.heartHandshake}</span><div class="program-title">Community Connection</div><p class="program-desc">We foster connection and fellowship through outreach, helping individuals rebuild their lives with dignity.</p></div>
         </div>
       </div>
       <div style="padding:2.5rem 2rem;border-radius:1.5rem;background:linear-gradient(to right,#172E1E,#121D15);border:1px solid #2F4D37;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1.5rem;">
@@ -849,9 +782,9 @@ function renderWholesalePage() {
         <h1 style="font-family:var(--font-serif);font-weight:900;font-size:clamp(1.875rem,5vw,3rem);color:var(--cream);margin-bottom:1rem;">Stock Soapbriety In Your Space</h1>
         <p style="font-size:1rem;color:var(--muted);line-height:1.7;max-width:48rem;">Partner with a brand that customers respect. We supply barbershops, boutique grocers, gyms, recovery centers, and lifestyle retailers with handcrafted cold-process soap that sells itself.</p>
       </div>
-      <div class="grid grid-3" style="gap:1.5rem;">
+      <div class="grid grid-2" style="gap:1.5rem;">
         <div class="benefit-card"><span style="color:var(--copper)">${ICONS.package}</span><div class="benefit-title">50% Dealer Pricing Margin</div><p class="benefit-desc">Generous wholesale margins with low minimum order quantities (MOQs) starting at just 50 bars.</p></div>
-        <div class="benefit-card"><span style="color:var(--green)">${ICONS.building2}</span><div class="benefit-title">Custom Cedar Counter Displays</div><p class="benefit-desc">Receive branded solid cedarwood retail displays and high-impact POS signage with your first opening order.</p></div>
+
         <div class="benefit-card"><span style="color:var(--green-lt)">${ICONS.shieldCheck}</span><div class="benefit-title">Co-Branded Impact Marketing</div><p class="benefit-desc">Your store is featured on our dealer locator, highlighting how your business helps fund The Wheelhouse.</p></div>
       </div>
       <div style="max-width:48rem;margin:0 auto;padding:3rem 2rem;border-radius:1.5rem;background:#0F1411;border:1px solid #243428;width:100%;box-sizing:border-box;">
@@ -1177,75 +1110,59 @@ function subscribeNewsletter(e) {
 function renderCartDrawer() {
   if (!state.cartOpen) return '';
   const FREE_SHIP = 45;
+  const lines = shopifyCartLines();
   const subtotal = cartTotal();
-  const impactHrs = cartImpactHours();
+  const totalQty = cartCount();
   const needed = Math.max(0, FREE_SHIP - subtotal);
   const progress = Math.min(100, (subtotal / FREE_SHIP) * 100);
-  const shipping = needed === 0 ? 0 : 5;
-  const total = subtotal + shipping;
+  const currency = shopifyCartCurrency();
 
   return `
   <div class="cart-overlay" onclick="if(event.target===this)closeCart()">
     <div class="cart-drawer">
       <div class="cart-header">
-        <div class="cart-title">${ICONS.shoppingBag} Your Fresh Start Cart (${cartCount()})</div>
+        <div class="cart-title">${ICONS.shoppingBag} Your Fresh Start Cart (${totalQty})</div>
         <button class="cart-close" onclick="closeCart()">${ICONS.x}</button>
       </div>
       <div class="cart-ship-bar">
         ${needed > 0
-          ? `<p>Add <strong style="color:var(--green);font-family:var(--font-mono);">$${needed.toFixed(2)}</strong> more to unlock <strong style="color:var(--cream)">FREE Shipping</strong>!</p>`
-          : `<p style="color:var(--green);font-weight:700;display:flex;align-items:center;gap:.375rem;">${ICONS.truck} Unlocked FREE US Standard Shipping!</p>`}
+          ? '<p>Add <strong style="color:var(--green);font-family:var(--font-mono);">' + formatMoney(needed, currency) + '</strong> more to unlock <strong style="color:var(--cream)">FREE Shipping</strong>!</p>'
+          : '<p style="color:var(--green);font-weight:700;display:flex;align-items:center;gap:.375rem;">' + ICONS.truck + ' Unlocked FREE US Standard Shipping!</p>'}
         <div class="ship-progress-track"><div class="ship-progress-fill" style="width:${progress}%"></div></div>
       </div>
-      ${impactHrs > 0 ? `
-      <div class="cart-impact-box">
-        <div class="cart-impact-left">${ICONS.heartHandshake}<div><span class="impact-label">Wheelhouse Recovery Impact</span><span class="impact-sub">This order funds peer support circles</span></div></div>
-        <span class="impact-hrs">+${impactHrs.toFixed(1)} hrs</span>
-      </div>` : ''}
       <div class="cart-items">
-        ${state.cart.length === 0
-          ? `<div class="cart-empty">
-              <div class="cart-empty-icon">${ICONS.shoppingBag}</div>
-              <div style="font-family:var(--font-serif);font-weight:700;font-size:1.125rem;color:var(--cream);">Your cart is empty</div>
-              <p style="font-size:.75rem;color:#8E9E91;text-align:center;">Every handcrafted bar you add helps fund recovery programs at The Wheelhouse.</p>
-            </div>`
-          : state.cart.map(item => {
-            const p = PRODUCTS.find(x=>x.id===item.productId);
-            if (!p) return '';
-            const price = item.isSubscription ? p.price * 0.85 : p.price;
-            return `
-            <div class="cart-item">
-              <img src="${p.images[0]}" alt="${p.name}" class="cart-item-img">
-              <div class="cart-item-info">
-                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;">
-                  <div class="cart-item-name">${p.name}</div>
-                  <button class="cart-item-remove" onclick="removeFromCart('${p.id}')">${ICONS.trash2}</button>
-                </div>
-                <div class="cart-item-unit">$${price.toFixed(2)} each • ${p.impactHours}h Wheelhouse</div>
-                <button class="cart-item-sub-toggle ${item.isSubscription?'active':''}" onclick="toggleSubscription('${p.id}',${!item.isSubscription})">
-                  ${item.isSubscription ? '✓ Auto-Renew (-15%)' : 'One-Time Purchase'}
-                </button>
-                <div style="display:flex;align-items:center;justify-content:space-between;padding-top:.375rem;">
-                  <div class="cart-item-qty">
-                    <button class="qty-btn" onclick="updateQuantity('${p.id}',${item.quantity-1})">${ICONS.minus}</button>
-                    <span class="qty-num">${item.quantity}</span>
-                    <button class="qty-btn" onclick="updateQuantity('${p.id}',${item.quantity+1})">${ICONS.plus}</button>
-                  </div>
-                  <span class="cart-item-price">$${(price*item.quantity).toFixed(2)}</span>
-                </div>
-              </div>
-            </div>`;}).join('')}
+        ${lines.length === 0
+          ? '<div class="cart-empty"><div class="cart-empty-icon">' + ICONS.shoppingBag + '</div><div style="font-family:var(--font-serif);font-weight:700;font-size:1.125rem;color:var(--cream);">Your cart is empty</div><p style="font-size:.75rem;color:#8E9E91;text-align:center;">Every handcrafted bar you add helps fund recovery programs at The Wheelhouse.</p></div>'
+          : lines.map(function(item) {
+            var variantLabel = (item.variantTitle && item.variantTitle !== 'Default Title') ? '<div style="font-size:.6875rem;color:var(--muted-dk);">' + item.variantTitle + '</div>' : '';
+            return '<div class="cart-item">'
+              + '<img src="' + item.image + '" alt="' + item.productTitle + '" class="cart-item-img">'
+              + '<div class="cart-item-info">'
+              + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;">'
+              + '<div class="cart-item-name">' + item.productTitle + '</div>'
+              + '<button class="cart-item-remove" onclick="removeFromCart(\'' + item.lineId + '\')">' + ICONS.trash2 + '</button>'
+              + '</div>'
+              + variantLabel
+              + '<div class="cart-item-unit">' + formatMoney(item.unitPrice, item.currencyCode) + ' each</div>'
+              + '<div style="display:flex;align-items:center;justify-content:space-between;padding-top:.375rem;">'
+              + '<div class="cart-item-qty">'
+              + '<button class="qty-btn" onclick="updateQuantity(\'' + item.lineId + '\',' + (item.quantity - 1) + ')">' + ICONS.minus + '</button>'
+              + '<span class="qty-num">' + item.quantity + '</span>'
+              + '<button class="qty-btn" onclick="updateQuantity(\'' + item.lineId + '\',' + (item.quantity + 1) + ')">' + ICONS.plus + '</button>'
+              + '</div>'
+              + '<span class="cart-item-price">' + formatMoney(item.lineTotal, item.lineCurrencyCode) + '</span>'
+              + '</div></div></div>';
+          }).join('')}
       </div>
-      ${state.cart.length > 0 ? `
+      ${lines.length > 0 ? `
       <div class="cart-footer">
         <div style="display:flex;flex-direction:column;gap:.375rem;">
-          <div class="cart-line"><span>Subtotal</span><span style="color:var(--cream);font-weight:700;">$${subtotal.toFixed(2)}</span></div>
-          <div class="cart-line"><span>Estimated US Shipping</span><span>${needed===0?`<span style="color:var(--green);font-weight:700;">FREE</span>`:'$5.00'}</span></div>
-          <div class="cart-line total"><span>Estimated Total</span><span class="cart-total-num">$${total.toFixed(2)}</span></div>
+          <div class="cart-line"><span>Subtotal</span><span style="color:var(--cream);font-weight:700;">${formatMoney(subtotal, currency)}</span></div>
+          <div class="cart-line"><span>Shipping &amp; taxes</span><span style="font-size:.75rem;color:var(--muted);">Calculated at checkout</span></div>
         </div>
-        <button onclick="simulateCheckout()" id="checkout-btn" class="btn btn-copper btn-full">${ICONS.sparkles} Proceed To Checkout ${ICONS.arrowRight}</button>
+        <button onclick="goToCheckout()" id="checkout-btn" class="btn btn-copper btn-full">${ICONS.sparkles} Proceed To Checkout ${ICONS.arrowRight}</button>
         <div class="cart-trust">
-          <span class="cart-trust-item">${ICONS.shieldCheck} 256-Bit Encryption</span>
+          <span class="cart-trust-item">${ICONS.shieldCheck} Secure Shopify Checkout</span>
           <span>•</span><span>30-Day Money Back</span>
         </div>
       </div>` : ''}
@@ -1253,43 +1170,42 @@ function renderCartDrawer() {
   </div>`;
 }
 
-let checkoutDone = false;
-function simulateCheckout() {
-  const btn = document.getElementById('checkout-btn');
-  if (btn) { btn.textContent = 'Processing Order...'; btn.disabled = true; }
-  setTimeout(() => {
-    checkoutDone = true;
-    const items = document.querySelector('.cart-items');
-    const footer = document.querySelector('.cart-footer');
-    const hrs = cartImpactHours();
-    if (items) items.innerHTML = `
-    <div class="cart-order-done">
-      <div class="order-check-icon">${ICONS.check}</div>
-      <div style="font-family:var(--font-serif);font-weight:700;font-size:1.5rem;color:var(--cream);">Order Confirmed!</div>
-      <p style="font-size:.75rem;color:#9EB0A1;text-align:center;max-width:16rem;">Thank you for supporting Soapbriety and funding recovery at The Wheelhouse.</p>
-      <div style="padding:1rem;border-radius:.75rem;background:#141C16;border:1px solid #283C2F;font-size:.75rem;font-family:var(--font-mono);color:var(--green-lt);">Estimated Impact: ${hrs.toFixed(1)} hours of peer support circles funded.</div>
-      <button class="btn btn-copper" onclick="closeCart();clearCart();">Back To Shop</button>
-    </div>`;
-    if (footer) footer.style.display = 'none';
-  }, 1500);
+function goToCheckout() {
+  var url = shopifyGetCheckoutUrl();
+  if (url) {
+    window.location.href = url;
+  } else {
+    showToast('Checkout is temporarily unavailable. Please try again.');
+  }
 }
 
 /* ── PRODUCT MODAL ── */
-let modalSub = false;
 let modalAdded = false;
 let modalImg = 0;
-function openQuickView(productId) {
-  const product = PRODUCTS.find(p=>p.id===productId);
+let modalSelectedVariant = null;
+
+function openQuickView(handleOrId) {
+  var product = SHOP_PRODUCTS.find(function(p) { return p.handle === handleOrId || p.id === handleOrId; });
   if (!product) return;
   state.quickViewProduct = product;
-  modalSub = false; modalAdded = false; modalImg = 0;
+  modalAdded = false;
+  modalImg = 0;
+  modalSelectedVariant = product.variants[0] || null;
   renderProductModal();
 }
 
 function renderProductModal() {
   const p = state.quickViewProduct;
   if (!p) return;
-  const price = modalSub ? p.price * 0.85 : p.price;
+  var v = modalSelectedVariant || p.variants[0];
+  var price = v ? v.price : p.price;
+  var compareAt = v ? v.compareAtPrice : p.compareAtPrice;
+  var currency = v ? v.currencyCode : (p.currencyCode || 'USD');
+  var soldOut = v ? !v.availableForSale : !p.availableForSale;
+  var variantId = v ? v.id : p.defaultVariantId;
+  var hasMultipleVariants = p.variants.length > 1 && !(p.variants.length === 1 && p.variants[0].title === 'Default Title');
+  var imgSrc = (p.images[modalImg] || p.images[0] || p.featuredImage || '');
+
   const m = document.getElementById('product-modal');
   m.innerHTML = `
   <div class="modal-backdrop" onclick="closeProductModal()"></div>
@@ -1297,72 +1213,67 @@ function renderProductModal() {
     <button class="modal-close" onclick="closeProductModal()">${ICONS.x}</button>
     <div class="modal-gallery">
       <div class="modal-img-main">
-        <img src="${p.images[modalImg]||p.images[0]}" alt="${p.name}" id="modal-main-img">
-        <div class="modal-impact-badge">+${p.impactHours}h Wheelhouse Funded</div>
+        <img src="${imgSrc}" alt="${p.title}" id="modal-main-img">
       </div>
       ${p.images.length > 1 ? `
       <div class="modal-thumbs">
-        ${p.images.map((img,i)=>`<div class="modal-thumb ${i===modalImg?'active':''}" onclick="setModalImg(${i})"><img src="${img}" alt=""></div>`).join('')}
+        ${p.images.map((img,i)=>'<div class="modal-thumb ' + (i===modalImg?'active':'') + '" onclick="setModalImg(' + i + ')"><img src="' + img + '" alt=""></div>').join('')}
       </div>` : ''}
     </div>
     <div class="modal-details">
       <div>
-        <div class="modal-cat-line"><span>${p.category}</span><span>•</span><span class="wt">${p.weightOz} oz cold process bar</span></div>
-        <div class="modal-product-name">${p.name}</div>
-        <div class="modal-subtitle">${p.subtitle}</div>
+        <div class="modal-cat-line"><span>${p.productType || ''}</span></div>
+        <div class="modal-product-name">${p.title}</div>
       </div>
       <div class="modal-price-row">
         <div style="display:flex;align-items:center;gap:.5rem;">
-          <span class="modal-price">$${price.toFixed(2)}</span>
-          ${modalSub?`<span class="save-badge">SAVE 15%</span>`:''}
-        </div>
-        <div class="modal-rating-row">
-          <span style="color:var(--amber)">★</span>
-          <span style="font-family:var(--font-mono);font-weight:700;font-size:.875rem;">${p.rating.toFixed(2)}</span>
-          <span style="font-size:.75rem;color:#78887C;">(${p.reviewCount} reviews)</span>
+          ${(compareAt && compareAt > price) ? '<span style="text-decoration:line-through;color:var(--muted-dk);margin-right:.25rem;">' + formatMoney(compareAt, currency) + '</span>' : ''}
+          <span class="modal-price">${formatMoney(price, currency)}</span>
+          ${soldOut ? '<span class="save-badge" style="background:var(--red);">SOLD OUT</span>' : ''}
         </div>
       </div>
-      <div class="scent-pyramid">
-        <h4>${ICONS.sparkles} Fragrance Profile Notes</h4>
-        <div class="scent-grid">
-          <div class="scent-col"><span class="scent-label">TOP</span><span class="scent-value">${p.scentProfile.top.join(', ')}</span></div>
-          <div class="scent-col"><span class="scent-label">HEART</span><span class="scent-value">${p.scentProfile.heart.join(', ')}</span></div>
-          <div class="scent-col"><span class="scent-label">BASE</span><span class="scent-value">${p.scentProfile.base.join(', ')}</span></div>
-        </div>
-      </div>
+      ${hasMultipleVariants ? '<div class="purchase-options">' + p.variants.map(function(vr) {
+        var isActive = (modalSelectedVariant && modalSelectedVariant.id === vr.id);
+        return '<button class="purchase-opt ' + (isActive ? 'active' : '') + '" onclick="selectVariant(\'' + vr.id + '\')">' +
+          '<div class="purchase-opt-title">' + vr.title + '</div>' +
+          '<div class="purchase-opt-price">' + formatMoney(vr.price, vr.currencyCode) + (vr.availableForSale ? '' : ' - Sold Out') + '</div>' +
+          '</button>';
+      }).join('') + '</div>' : ''}
       <div>
-        <p class="modal-desc">${p.description}</p>
-        <p class="modal-story" style="margin-top:.75rem;">"${p.storySnippet}"</p>
+        <p class="modal-desc">${p.descriptionHtml || p.description || ''}</p>
       </div>
-      <div class="modal-ingredients">
-        <h4>Key Botanicals &amp; Ingredients</h4>
-        <p>${p.ingredients.join(', ')}.</p>
-      </div>
-      <div class="purchase-options">
-        <button class="purchase-opt ${!modalSub?'active':''}" onclick="setModalSub(false)">
-          <div class="purchase-opt-title">One-Time Bar</div>
-          <div class="purchase-opt-price">$${p.price.toFixed(2)}</div>
-        </button>
-        <button class="purchase-opt ${modalSub?'active':''}" onclick="setModalSub(true)">
-          <div class="purchase-opt-title sub-active">Auto-Refill <span class="sub-save">SAVE 15%</span></div>
-          <div class="purchase-opt-price">$${(p.price*0.85).toFixed(2)} / 30 days</div>
-        </button>
-      </div>
-      <button class="modal-atc-btn ${modalAdded?'added':''}" onclick="modalAddToCart()">
-        ${modalAdded ? `${ICONS.check} Added To Fresh Start Cart!` : `${ICONS.shoppingBag} Add To Cart • $${price.toFixed(2)}`}
+      <button class="modal-atc-btn ${modalAdded ? 'added' : ''}${soldOut ? ' disabled' : ''}" onclick="modalAddToCart()" ${soldOut ? 'disabled' : ''}>
+        ${modalAdded ? ICONS.check + ' Added To Cart!' : (soldOut ? ICONS.shoppingBag + ' Sold Out' : ICONS.shoppingBag + ' Add To Cart \u2022 ' + formatMoney(price, currency))}
       </button>
     </div>
   </div>`;
   m.style.display = 'flex';
 }
 
+function selectVariant(variantId) {
+  var p = state.quickViewProduct;
+  if (!p) return;
+  var v = p.variants.find(function(vr) { return vr.id === variantId; });
+  if (v) {
+    modalSelectedVariant = v;
+    // If variant has its own image, switch to it
+    if (v.image) {
+      var idx = p.images.indexOf(v.image);
+      if (idx >= 0) modalImg = idx;
+    }
+    renderProductModal();
+  }
+}
+
 function setModalImg(i) { modalImg = i; renderProductModal(); }
-function setModalSub(sub) { modalSub = sub; renderProductModal(); }
 function modalAddToCart() {
-  addToCart(state.quickViewProduct.id, modalSub);
+  if (!state.quickViewProduct) return;
+  var v = modalSelectedVariant || state.quickViewProduct.variants[0];
+  if (!v || !v.availableForSale) return;
+  addToCart(v.id);
   modalAdded = true;
   renderProductModal();
-  setTimeout(() => { modalAdded = false; if(state.quickViewProduct) renderProductModal(); }, 1800);
+  setTimeout(function() { modalAdded = false; if(state.quickViewProduct) renderProductModal(); }, 1800);
 }
 function closeProductModal() {
   const m = document.getElementById('product-modal');
@@ -1378,38 +1289,35 @@ function closeSearch() { state.searchOpen = false; const m=document.getElementBy
 function renderSearchModal() {
   if (!state.searchOpen) return;
   const q = searchQuery.toLowerCase();
-  const results = PRODUCTS.filter(p =>
-    !q || p.name.toLowerCase().includes(q) || p.subtitle.toLowerCase().includes(q) ||
-    p.category.toLowerCase().includes(q) || p.ingredients.some(i=>i.toLowerCase().includes(q)) ||
-    p.scentProfile.top.some(s=>s.toLowerCase().includes(q))
-  );
+  const results = SHOP_PRODUCTS.filter(function(p) {
+    return !q || p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q) ||
+      (p.productType || '').toLowerCase().includes(q) || (p.tags && p.tags.some(function(t) { return t.toLowerCase().includes(q); }));
+  });
   const m = document.getElementById('search-modal');
   m.innerHTML = `
   <div class="modal-backdrop" onclick="closeSearch()"></div>
   <div class="search-modal-box">
     <div class="search-bar-row">
       ${ICONS.search}
-      <input type="text" class="search-modal-input" id="search-input" placeholder="Search bars by name, scent notes (fir, charcoal, pine tar, honey)..." value="${searchQuery}" oninput="updateSearch(this.value)" autofocus>
-      ${searchQuery?`<button onclick="updateSearch('')" style="color:#8E9E91;background:none;border:none;cursor:pointer;padding:.25rem;">${ICONS.x}</button>`:''}
+      <input type="text" class="search-modal-input" id="search-input" placeholder="Search bars by name, scent, type..." value="${searchQuery}" oninput="updateSearch(this.value)" autofocus>
+      ${searchQuery?'<button onclick="updateSearch(\'\')" style="color:#8E9E91;background:none;border:none;cursor:pointer;padding:.25rem;">' + ICONS.x + '</button>':''}
       <button class="search-esc" onclick="closeSearch()">ESC</button>
     </div>
     <div class="search-results">
-      ${results.length === 0 && q ? `<div style="padding:3rem;text-align:center;font-size:.75rem;color:#8E9E91;font-family:var(--font-mono);">No handcrafted bars matched your search query "${searchQuery}".</div>` :
-        results.map(p=>`
-        <div class="search-result-item" onclick="openQuickView('${p.id}');closeSearch();">
-          <div class="search-result-left">
-            <img src="${p.images[0]}" alt="${p.name}" class="search-result-img">
-            <div>
-              <span class="search-result-cat">${p.category}</span>
-              <div class="search-result-name">${p.name}</div>
-              <div class="search-result-sub line-clamp-1">${p.subtitle}</div>
-            </div>
-          </div>
-          <div class="search-result-right">
-            <span class="search-result-price">$${p.price.toFixed(2)}</span>
-            <span class="search-result-impact">+${p.impactHours}h Wheelhouse</span>
-          </div>
-        </div>`).join('')}
+      ${results.length === 0 && q ? '<div style="padding:3rem;text-align:center;font-size:.75rem;color:#8E9E91;font-family:var(--font-mono);">No products matched "' + searchQuery + '".</div>' :
+        results.map(function(p) {
+          var img = p.images[0] || p.featuredImage || '';
+          return '<div class="search-result-item" onclick="openQuickView(\'' + (p.handle || p.id) + '\');closeSearch();">'
+            + '<div class="search-result-left">'
+            + '<img src="' + img + '" alt="' + p.title + '" class="search-result-img">'
+            + '<div>'
+            + '<span class="search-result-cat">' + (p.productType || '') + '</span>'
+            + '<div class="search-result-name">' + p.title + '</div>'
+            + '</div></div>'
+            + '<div class="search-result-right">'
+            + '<span class="search-result-price">' + formatMoney(p.price, p.currencyCode) + '</span>'
+            + '</div></div>';
+        }).join('')}
     </div>
   </div>`;
   m.style.display = 'flex';
@@ -1439,9 +1347,7 @@ function renderApp() {
     case 'shop':       main.innerHTML = renderShopPage(); break;
     case 'story':      main.innerHTML = renderStoryPage(); break;
     case 'wheelhouse': main.innerHTML = renderWheelhousePage(); break;
-    case 'impact':     main.innerHTML = renderImpactPage(); break;
     case 'wholesale':  main.innerHTML = renderWholesalePage(); break;
-    case 'journal':    main.innerHTML = renderJournalPage(); break;
     case 'faq':        main.innerHTML = renderFAQPage(); break;
     case 'contact':    main.innerHTML = renderContactPage(); break;
     default:           main.innerHTML = renderHomePage();
@@ -1459,5 +1365,35 @@ function renderApp() {
   document.onkeydown = (e) => { if (e.key === 'Escape') { closeSearch(); closeProductModal(); closeCart(); } };
 }
 
-// Boot
-document.addEventListener('DOMContentLoaded', renderApp);
+// Boot — async init with Shopify, fallback to static data
+(async function() {
+  // Show loading state
+  document.addEventListener('DOMContentLoaded', function() {
+    var main = document.getElementById('main-content');
+    if (main) main.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:60vh;color:var(--muted);font-family:var(--font-mono);font-size:.875rem;"><div style="text-align:center;"><div style="margin-bottom:1rem;animation:pulse 1.5s infinite;">Loading Soapbriety...</div></div></div>';
+  });
+
+  // Wait for DOM
+  await new Promise(function(resolve) {
+    if (document.readyState !== 'loading') resolve();
+    else document.addEventListener('DOMContentLoaded', resolve);
+  });
+
+  // Try Shopify, fall back to static data
+  try {
+    var products = await initShopify();
+    if (products && products.length > 0) {
+      SHOP_PRODUCTS = products;
+      console.info('[Soapbriety] Loaded ' + products.length + ' products from Shopify.');
+    } else {
+      // Shopify returned no products — use static fallback
+      SHOP_PRODUCTS = (typeof PRODUCTS !== 'undefined') ? PRODUCTS : [];
+      console.info('[Soapbriety] No Shopify products found; using static data (' + SHOP_PRODUCTS.length + ' products).');
+    }
+  } catch(err) {
+    SHOP_PRODUCTS = (typeof PRODUCTS !== 'undefined') ? PRODUCTS : [];
+    console.warn('[Soapbriety] Shopify unavailable; using static fallback (' + SHOP_PRODUCTS.length + ' products).');
+  }
+
+  renderApp();
+})();

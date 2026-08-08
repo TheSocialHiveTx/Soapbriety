@@ -19,7 +19,7 @@ const PRODUCTS = [
     storySnippet: "Inspired by DJ's first 24 hours of sobriety on April 20, 2023. A reminder that every morning is a clean slate.",
     directions: 'Lather under warm water. Massage over shoulders, chest, and body in circular motions. Rinse thoroughly and embrace the clean start.',
     weightOz: 5.5,
-    images: ['https://images.unsplash.com/photo-1607006482172-3ba98971f165?auto=format&fit=crop&w=1000&q=80','https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?auto=format&fit=crop&w=1000&q=80','https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1000&q=80'],
+    images: ['gallery/3ada57e8-5227-4e4d-9ec3-ce7070a86040.jpg','https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?auto=format&fit=crop&w=1000&q=80','https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1000&q=80'],
     isBestSeller: true, inStock: true
   },
   {
@@ -37,7 +37,7 @@ const PRODUCTS = [
     storySnippet: '100% of net proceeds from Wheelhouse Reserve directly sponsor peer recovery circle hosting and weekend fellowship meals.',
     directions: 'Work into a velvety lather between palms or washcloth. Cleanse gently. Suitable for both face and full body.',
     weightOz: 6.0,
-    images: ['https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?auto=format&fit=crop&w=1000&q=80','https://images.unsplash.com/photo-1546554137-f86b9593a222?auto=format&fit=crop&w=1000&q=80'],
+    images: ['gallery/ba33da71-ce16-4a14-8025-bb2adec42823.jpg','https://images.unsplash.com/photo-1546554137-f86b9593a222?auto=format&fit=crop&w=1000&q=80'],
     isBestSeller: true, inStock: true
   },
   {
@@ -55,7 +55,7 @@ const PRODUCTS = [
     storySnippet: 'Designed to symbolize the clarity that comes when the morning fog clears.',
     directions: 'Rub directly onto skin to experience gentle poppy seed scrubbing action.',
     weightOz: 5.5,
-    images: ['https://images.unsplash.com/photo-1617897903246-719242758050?auto=format&fit=crop&w=1000&q=80','https://images.unsplash.com/photo-1607006482172-3ba98971f165?auto=format&fit=crop&w=1000&q=80'],
+    images: ['gallery/c282a4c6-3cbc-4aa6-8abf-e4bce0e6e0c2.jpg','https://images.unsplash.com/photo-1607006482172-3ba98971f165?auto=format&fit=crop&w=1000&q=80'],
     isBestSeller: false, inStock: true
   },
   {
@@ -73,7 +73,7 @@ const PRODUCTS = [
     storySnippet: 'Created for tradespeople, athletes, and anyone building their life back with their own two hands.',
     directions: 'Lather onto affected skin or weary hands. Allow lather to rest on skin for 60 seconds before rinsing.',
     weightOz: 6.0,
-    images: ['https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1000&q=80','https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?auto=format&fit=crop&w=1000&q=80'],
+    images: ['gallery/dd166f18-136f-47a0-93e1-c56a675f3e7b.jpg','https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?auto=format&fit=crop&w=1000&q=80'],
     isBestSeller: true, inStock: true
   },
   {
@@ -91,7 +91,7 @@ const PRODUCTS = [
     storySnippet: 'Reminds us that nature provides everything needed for renewal.',
     directions: 'Massage over wet skin. Enjoy the tingling cooling effect as green clay absorbs surface oil.',
     weightOz: 5.5,
-    images: ['https://images.unsplash.com/photo-1607006482172-3ba98971f165?auto=format&fit=crop&w=1000&q=80','https://images.unsplash.com/photo-1617897903246-719242758050?auto=format&fit=crop&w=1000&q=80'],
+    images: ['gallery/f4183476-a5c1-49e8-9bec-57eeb949efb6.jpg','https://images.unsplash.com/photo-1617897903246-719242758050?auto=format&fit=crop&w=1000&q=80'],
     inStock: true
   },
   {

@@ -6,19 +6,19 @@
 
 /* ── CSS Variables ── */
 :root {
-  --bg:        #0C0D0E;
-  --bg-card:   #121614;
-  --bg-deep:   #08090A;
-  --bg-mid:    #0F1411;
-  --border:    #1E2521;
-  --border-g:  #243428;
-  --green:     #4ADE80;
-  --green-lt:  #86EFAC;
-  --copper:    #C87A4B;
-  --copper-lt: #D98A5B;
-  --cream:     #F5F2EB;
-  --muted:     #A3B3A6;
-  --muted-dk:  #8E9E91;
+  --bg:        #241C16;
+  --bg-card:   #2F251E;
+  --bg-deep:   #1E1611;
+  --bg-mid:    #292019;
+  --border:    #40332A;
+  --border-g:  #1E4340;
+  --green:     #1E8882;
+  --green-lt:  #2BB1A4;
+  --copper:    #C87046;
+  --copper-lt: #E28C62;
+  --cream:     #FDF8F5;
+  --muted:     #B5A69D;
+  --muted-dk:  #8A7B72;
   --amber:     #F59E0B;
   --red:       #991B1B;
   --instagram: #E1306C;
@@ -171,8 +171,8 @@ ul { list-style: none; }
 
 /* ── Announcement Bar ── */
 .announce-bar {
-  background: #121A15;
-  border-bottom: 1px solid #1E2C22;
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--border);
   padding: .375rem 1rem;
   font-family: var(--font-mono);
   font-size: .6875rem;
@@ -192,7 +192,7 @@ ul { list-style: none; }
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(12,13,14,.85);
+  background: rgba(36, 28, 22, 0.85);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(255,255,255,0.05);
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
