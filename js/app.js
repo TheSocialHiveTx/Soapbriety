@@ -324,13 +324,6 @@ function renderHomePage() {
       <div class="hero-dot-grid"></div>
     </div>
     <div class="hero-content">
-      <div style="transform:scale(1);transition:transform .5s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-        <div class="logo-glow"></div>
-        <div class="logo-emblem-wrap" style="width:10rem;height:10rem;">
-          ${SKULL_SVG}
-          <div class="logo-emblem-banner">SOAPBRIETY</div>
-        </div>
-      </div>
       <div style="display:flex;flex-direction:column;align-items:center;gap:1rem;max-width:56rem;">
         <div class="badge-pill badge-green" style="display:inline-flex;align-items:center;gap:.5rem;">
           ${ICONS.flame}<span style="color:var(--copper)"></span>FROTHY AF • APRIL 20, 2023 CLEAN DATE
@@ -380,45 +373,23 @@ function renderHomePage() {
       </div>
     </div>
 
-    <!-- COLLECTIONS GRID -->
+    <!-- 30 DAY CHIP SECTION -->
     <div class="section">
-      <div class="section-header" style="margin-bottom:2rem;">
-        <div>
-          <span class="section-eyebrow">CURATED ARTISAN BATCHES</span>
-          <div class="section-title">Featured Collections</div>
+      <div style="padding:3rem 2rem;border-radius:1.5rem;background:linear-gradient(to right,#172E1E,#121D15);border:1px solid #2F4D37;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:2rem;">
+        <div style="flex:1;min-width:300px;">
+          <div class="badge-pill badge-green" style="display:inline-flex;margin-bottom:1rem;">${ICONS.star} A ONE-TIME GESTURE OF RESPECT</div>
+          <h3 style="font-family:var(--font-serif);font-weight:900;font-size:clamp(1.5rem,3vw,2rem);color:var(--cream);margin-bottom:1rem;line-height:1.2;">Celebrating your first 30 days?</h3>
+          <p style="font-size:1rem;color:var(--muted);line-height:1.7;margin-bottom:1rem;">That first month in recovery is the hardest part of the entire journey. To honor that huge step, your first 30-day chip gets you a free bar of soap on us.</p>
+          <p style="font-size:1rem;color:var(--muted);line-height:1.7;margin-bottom:1.5rem;">Bring your 30-day token to an event or send us a photo of your chip to claim it. It’s a one-time gesture of respect from someone who’s walked that path, celebrating the moment you proved to yourself that a new life is possible. Stay Frothy AF.</p>
+          <button class="btn btn-copper" onclick="navigate('contact')">Claim Your Free Bar</button>
         </div>
-        <button class="btn btn-green btn-sm" onclick="navigate('shop')">EXPLORE ALL ${ICONS.arrowRight}</button>
-      </div>
-      <div class="grid grid-3" style="gap:1.5rem;">
-        <div class="collection-card" onclick="navigate('shop')">
-          <img src="gallery/3ada57e8-5227-4e4d-9ec3-ce7070a86040.jpg" alt="Best Sellers">
-          <div class="collection-grad"></div>
-          <div class="collection-info">
-            <span class="coll-badge coll-badge-copper">BEST SELLERS</span>
-            <div class="coll-title">Flagship Cold Process Bars</div>
-            <p class="coll-desc line-clamp-2">Day One, Wheelhouse Reserve, Iron Clasp Pine Tar. Deep lather, zero synthetic junk.</p>
-          </div>
-        </div>
-        <div class="collection-card" onclick="navigate('shop')">
-          <img src="gallery/dd166f18-136f-47a0-93e1-c56a675f3e7b.jpg" alt="Fruit Collection">
-          <div class="collection-grad"></div>
-          <div class="collection-info">
-            <span class="coll-badge coll-badge-green">FRUIT COLLECTION</span>
-            <div class="coll-title">Citrus &amp; Botanical Renewal</div>
-            <p class="coll-desc line-clamp-2">Blood orange, ruby red grapefruit, wild fig, blue poppy seed natural micro-scrubs.</p>
-          </div>
-        </div>
-        <div class="collection-card" onclick="navigate('shop')">
-          <img src="gallery/ba33da71-ce16-4a14-8025-bb2adec42823.jpg" alt="Gift Boxes">
-          <div class="collection-grad"></div>
-          <div class="collection-info">
-            <span class="coll-badge coll-badge-white">GIFT SETS &amp; CRATES</span>
-            <div class="coll-title">Fresh Start Gift Boxes</div>
-            <p class="coll-desc line-clamp-2">3-bar and 5-bar luxury bundles packed with solid cedarwood drainage dishes &amp; founder letters.</p>
-          </div>
+        <div style="flex:1;min-width:300px;display:flex;justify-content:center;align-items:center;">
+          <div style="width:12rem;height:12rem;border-radius:50%;background:#0F1311;border:2px solid var(--copper);display:flex;justify-content:center;align-items:center;color:var(--copper);font-family:var(--font-serif);font-weight:900;font-size:3.5rem;box-shadow:0 0 30px rgba(206,140,92,0.15);">30</div>
         </div>
       </div>
     </div>
+
+
 
     <!-- PRODUCTS SECTION -->
     <div class="section">
@@ -455,31 +426,7 @@ function renderHomePage() {
       </div>
     </div>
 
-    <!-- SOCIAL GALLERY -->
-    <div class="section">
-      <div class="section-header" style="margin-bottom:2rem;">
-        <div>
-          <span class="section-eyebrow">INSTAGRAM &amp; FACEBOOK COMMUNITY FEED</span>
-          <div class="section-title">Behind The Scenes &amp; Impact Gallery</div>
-        </div>
-        <div style="display:flex;gap:.75rem;">
-          <a href="https://www.instagram.com/soapbriety" target="_blank" rel="noopener noreferrer" class="btn btn-dark btn-sm" style="color:var(--instagram);border-color:#26352A;">${ICONS.instagram} @soapbriety</a>
-          <a href="https://www.facebook.com/profile.php?id=61567785470478" target="_blank" rel="noopener noreferrer" class="btn btn-dark btn-sm" style="color:var(--facebook);border-color:#26352A;">${ICONS.facebook} Facebook</a>
-        </div>
-      </div>
-      <div class="grid grid-4" style="gap:1rem;">
-        ${SOCIAL_POSTS.map(post=>`
-        <a class="social-post" href="${post.url}" target="_blank" rel="noopener noreferrer">
-          <img src="${post.imageUrl}" alt="${post.caption}">
-          <div class="social-post-grad"></div>
-          <div class="social-platform" style="color:${post.platform==='instagram'?'var(--instagram)':'var(--facebook)'};">${post.platform==='instagram'?ICONS.instagram:ICONS.facebook}</div>
-          <div class="social-caption">
-            <p class="social-cap-text line-clamp-2">${post.caption}</p>
-            <div class="social-stats"><span>❤️ ${post.likes}</span><span>💬 ${post.comments}</span></div>
-          </div>
-        </a>`).join('')}
-      </div>
-    </div>
+
 
     <!-- REVIEWS -->
     <div class="section" style="padding-bottom:5rem;">
@@ -684,7 +631,6 @@ function renderStoryPage() {
   <div class="section" style="padding-top:3rem;padding-bottom:5rem;">
     <div style="display:flex;flex-direction:column;gap:4rem;">
       <div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:1.5rem;max-width:48rem;margin:0 auto;">
-        <div style="position:relative;"><div class="logo-glow"></div><div class="logo-emblem-wrap" style="width:8rem;height:8rem;">${SKULL_SVG}<div class="logo-emblem-banner">SOAPBRIETY</div></div></div>
         <div class="badge-pill badge-green">${ICONS.calendar} APRIL 20, 2023 • FOUNDER DJ'S CLEAN DATE</div>
         <h1 style="font-family:var(--font-serif);font-weight:900;font-size:clamp(2rem,6vw,3.5rem);color:var(--cream);text-transform:uppercase;line-height:1.05;">Washing Away Yesterday. <br><span style="color:var(--copper);">Choosing To Move Forward.</span></h1>
         <p style="font-size:1rem;color:var(--muted);line-height:1.7;">The true story of how a morning wash basin on April 20, 2023 sparked a nationwide movement centered around recovery, discipline, and second chances.</p>
@@ -718,27 +664,141 @@ function renderStoryPage() {
 
 /* ── WHEELHOUSE PAGE ── */
 function renderWheelhousePage() {
+  const galleryImages = [
+    '04209442-3557-4d42-8b5b-117318ae55f7.jpg',
+    '0e7628aa-c2f3-4a9b-8dd3-477cbf27664b.jpg',
+    '3ada57e8-5227-4e4d-9ec3-ce7070a86040.jpg',
+    '4a248cac-bfd3-4d98-b8cb-c7a8324b9fd3.jpg',
+    '637fb6d4-5657-479a-8913-cb285b172f98.jpg',
+    '6a5a62cf-433b-4d03-b4e6-026582229bc3.jpg',
+    'aae475fc-65e8-4018-acb1-f7bf0d726b01.jpg',
+    'ba33da71-ce16-4a14-8025-bb2adec42823.jpg',
+    'c282a4c6-3cbc-4aa6-8abf-e4bce0e6e0c2.jpg',
+    'dd166f18-136f-47a0-93e1-c56a675f3e7b.jpg',
+    'ef050ec9-115f-4cff-9cb6-23c589c166f6.jpg',
+    'f4183476-a5c1-49e8-9bec-57eeb949efb6.jpg'
+  ];
+
   return `
   <div class="section" style="padding-top:3rem;padding-bottom:5rem;">
     <div style="display:flex;flex-direction:column;gap:4rem;">
       <div style="border-radius:1.5rem;background:linear-gradient(to right,#17291D,#0E1711,#1C1510);border:1px solid #2B4232;padding:3rem 2rem;">
         <div class="badge-pill badge-green" style="display:inline-flex;margin-bottom:1rem;">${ICONS.heartHandshake} THE WHEELHOUSE RECOVERY COMMUNITY CENTER</div>
-        <h1 style="font-family:var(--font-serif);font-weight:900;font-size:clamp(1.875rem,5vw,3rem);color:var(--cream);margin-bottom:1rem;">Where Fresh Starts Take Root</h1>
-        <p style="font-size:1rem;color:var(--muted);line-height:1.7;max-width:48rem;">The Wheelhouse is a non-profit community recovery space supported by Soapbriety. We provide a safe environment and fellowship for anyone working on rebuilding their life.</p>
+        <h1 style="font-family:var(--font-serif);font-weight:900;font-size:clamp(1.875rem,5vw,3rem);color:var(--cream);margin-bottom:1rem;">Why Support The Wheelhouse?</h1>
+        <p style="font-size:1rem;color:var(--muted);line-height:1.7;max-width:48rem;margin-bottom:1rem;">The Wheelhouse is a nonprofit men's recovery community in Deer Park, Texas, helping men overcome drug and alcohol addiction through a structured, spiritually centered, 12-Step recovery program. Since its beginnings in the 1950s, the organization has helped thousands of men rebuild their lives, restore their families, and become productive members of the community.</p>
+        <p style="font-size:1rem;color:var(--muted);line-height:1.7;max-width:48rem;">Rather than simply providing a place to stay, The Wheelhouse offers a long-term path to recovery built on accountability, brotherhood, service, employment, and personal responsibility. Recovery is viewed as something practiced every day through structure, purpose, and community.</p>
       </div>
+
       <div>
-        <h2 class="section-title" style="margin-bottom:1.5rem;">The Wheelhouse Community Center</h2>
-        <div class="grid grid-2" style="gap:1.5rem;">
-          <div class="program-card"><span style="color:var(--green)">${ICONS.users}</span><div class="program-title">A Safe Space</div><p class="program-desc">The Wheelhouse provides a secure, judgment-free environment for individuals focused on personal recovery and community support.</p></div>
-          <div class="program-card"><span style="color:var(--copper)">${ICONS.heartHandshake}</span><div class="program-title">Community Connection</div><p class="program-desc">We foster connection and fellowship through outreach, helping individuals rebuild their lives with dignity.</p></div>
+        <h2 class="section-title" style="margin-bottom:1.5rem;">What Makes The Wheelhouse Different?</h2>
+        <p style="font-size:1rem;color:var(--muted);line-height:1.7;max-width:48rem;margin-bottom:1.5rem;">Unlike many traditional treatment programs, The Wheelhouse emphasizes long-term transformation rather than short-term stabilization.</p>
+        <div class="grid grid-3" style="gap:1.5rem;">
+          <div class="program-card"><span style="color:var(--green)">${ICONS.home}</span><div class="program-title">Residential Community</div><p class="program-desc">A structured residential recovery community.</p></div>
+          <div class="program-card"><span style="color:var(--copper)">${ICONS.sparkles}</span><div class="program-title">Spiritually Centered</div><p class="program-desc">A spiritually centered, 12-Step approach.</p></div>
+          <div class="program-card"><span style="color:var(--amber)">${ICONS.users}</span><div class="program-title">Daily Accountability</div><p class="program-desc">Daily accountability and peer support.</p></div>
+          <div class="program-card"><span style="color:var(--green-lt)">${ICONS.briefcase}</span><div class="program-title">Life Skills</div><p class="program-desc">Employment and life-skills development.</p></div>
+          <div class="program-card"><span style="color:var(--blue)">${ICONS.shieldCheck}</span><div class="program-title">Transitional Living</div><p class="program-desc">Transitional sober living.</p></div>
+          <div class="program-card"><span style="color:var(--copper)">${ICONS.heartHandshake}</span><div class="program-title">Community Service</div><p class="program-desc">Community service and volunteer opportunities.</p></div>
+        </div>
+        <div style="margin-top:1.5rem;padding:1.5rem;border-radius:1rem;background:#141C16;border:1px solid #283C2F;">
+            <p style="font-size:1rem;color:var(--green-lt);font-weight:700;">The first 30 days of the program are offered free of charge, removing a major financial barrier for men seeking recovery.</p>
         </div>
       </div>
+
+      <div>
+        <h2 class="section-title" style="margin-bottom:1.5rem;">Why Community Support Matters</h2>
+        <p style="font-size:1rem;color:var(--muted);line-height:1.7;max-width:48rem;margin-bottom:1.5rem;">Every meal served, every bed provided, every utility bill paid, and every recovery program offered is made possible through the generosity of individuals, churches, businesses, and volunteers.</p>
+        <div class="grid grid-4" style="gap:1rem;">
+            <div style="display:flex;align-items:center;gap:.75rem;padding:1rem;background:#121814;border:1px solid #233127;border-radius:.75rem;color:var(--cream);font-size:.875rem;"><span style="color:var(--green);width:1.5rem;height:1.5rem;display:flex;flex-shrink:0;">${ICONS.checkCircle}</span> Safe housing</div>
+            <div style="display:flex;align-items:center;gap:.75rem;padding:1rem;background:#121814;border:1px solid #233127;border-radius:.75rem;color:var(--cream);font-size:.875rem;"><span style="color:var(--green);width:1.5rem;height:1.5rem;display:flex;flex-shrink:0;">${ICONS.checkCircle}</span> Nutritious meals</div>
+            <div style="display:flex;align-items:center;gap:.75rem;padding:1rem;background:#121814;border:1px solid #233127;border-radius:.75rem;color:var(--cream);font-size:.875rem;"><span style="color:var(--green);width:1.5rem;height:1.5rem;display:flex;flex-shrink:0;">${ICONS.checkCircle}</span> Recovery programming</div>
+            <div style="display:flex;align-items:center;gap:.75rem;padding:1rem;background:#121814;border:1px solid #233127;border-radius:.75rem;color:var(--cream);font-size:.875rem;"><span style="color:var(--green);width:1.5rem;height:1.5rem;display:flex;flex-shrink:0;">${ICONS.checkCircle}</span> Transportation assistance</div>
+            <div style="display:flex;align-items:center;gap:.75rem;padding:1rem;background:#121814;border:1px solid #233127;border-radius:.75rem;color:var(--cream);font-size:.875rem;"><span style="color:var(--green);width:1.5rem;height:1.5rem;display:flex;flex-shrink:0;">${ICONS.checkCircle}</span> Employment readiness</div>
+            <div style="display:flex;align-items:center;gap:.75rem;padding:1rem;background:#121814;border:1px solid #233127;border-radius:.75rem;color:var(--cream);font-size:.875rem;"><span style="color:var(--green);width:1.5rem;height:1.5rem;display:flex;flex-shrink:0;">${ICONS.checkCircle}</span> Facility maintenance</div>
+            <div style="display:flex;align-items:center;gap:.75rem;padding:1rem;background:#121814;border:1px solid #233127;border-radius:.75rem;color:var(--cream);font-size:.875rem;"><span style="color:var(--green);width:1.5rem;height:1.5rem;display:flex;flex-shrink:0;">${ICONS.checkCircle}</span> Educational materials</div>
+            <div style="display:flex;align-items:center;gap:.75rem;padding:1rem;background:#121814;border:1px solid #233127;border-radius:.75rem;color:var(--cream);font-size:.875rem;"><span style="color:var(--green);width:1.5rem;height:1.5rem;display:flex;flex-shrink:0;">${ICONS.checkCircle}</span> Community outreach</div>
+        </div>
+        <p style="font-size:1rem;color:var(--muted);line-height:1.7;max-width:48rem;margin-top:1.5rem;">Because The Wheelhouse is a nonprofit, community support directly helps create opportunities for men who are committed to changing their lives.</p>
+      </div>
+
+      <div style="padding:3rem 2rem;border-radius:1.5rem;background:#0F1311;border:1px solid #202A23;">
+        <h2 class="section-title" style="margin-bottom:1.5rem;">The Impact</h2>
+        <div class="grid grid-2" style="gap:2rem;">
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+                <div style="display:flex;align-items:flex-start;gap:1rem;">
+                    <div style="color:var(--green);margin-top:.25rem;">${ICONS.arrowRight}</div>
+                    <p style="font-size:1rem;color:var(--cream);line-height:1.5;">Helped more than 7,500 men begin rebuilding their lives.</p>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:1rem;">
+                    <div style="color:var(--green);margin-top:.25rem;">${ICONS.arrowRight}</div>
+                    <p style="font-size:1rem;color:var(--cream);line-height:1.5;">Reported that more than 64% of men who complete its long-term recovery program remain sober for at least one year after leaving.</p>
+                </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+                <div style="display:flex;align-items:flex-start;gap:1rem;">
+                    <div style="color:var(--green);margin-top:.25rem;">${ICONS.arrowRight}</div>
+                    <p style="font-size:1rem;color:var(--cream);line-height:1.5;">Invested millions of dollars into housing, meals, recovery programming, and job readiness.</p>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:1rem;">
+                    <div style="color:var(--green);margin-top:.25rem;">${ICONS.arrowRight}</div>
+                    <p style="font-size:1rem;color:var(--cream);line-height:1.5;">Continued expanding its campus to serve more men in need.</p>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="section-title" style="margin-bottom:1.5rem;">Ways You Can Help</h2>
+        <p style="font-size:1rem;color:var(--muted);line-height:1.7;max-width:48rem;margin-bottom:1.5rem;">Supporting The Wheelhouse isn't limited to financial donations. Community members can make a difference by:</p>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:1rem;color:var(--cream);">
+            <li style="display:flex;align-items:center;gap:.75rem;"><span style="color:var(--copper)">${ICONS.checkCircle}</span> Making a one-time or recurring donation</li>
+            <li style="display:flex;align-items:center;gap:.75rem;"><span style="color:var(--copper)">${ICONS.checkCircle}</span> Volunteering their time and skills</li>
+            <li style="display:flex;align-items:center;gap:.75rem;"><span style="color:var(--copper)">${ICONS.checkCircle}</span> Serving meals</li>
+            <li style="display:flex;align-items:center;gap:.75rem;"><span style="color:var(--copper)">${ICONS.checkCircle}</span> Becoming a recovery mentor (for qualified individuals)</li>
+            <li style="display:flex;align-items:center;gap:.75rem;"><span style="color:var(--copper)">${ICONS.checkCircle}</span> Participating in fundraising events</li>
+            <li style="display:flex;align-items:center;gap:.75rem;"><span style="color:var(--copper)">${ICONS.checkCircle}</span> Sponsoring community events</li>
+            <li style="display:flex;align-items:center;gap:.75rem;"><span style="color:var(--copper)">${ICONS.checkCircle}</span> Donating goods or professional services</li>
+            <li style="display:flex;align-items:center;gap:.75rem;"><span style="color:var(--copper)">${ICONS.checkCircle}</span> Partnering as a business, church, or civic organization</li>
+        </ul>
+      </div>
+
+      <div class="grid grid-2" style="gap:2rem;">
+        <div style="padding:2rem;background:#121814;border:1px solid #233127;border-radius:1.5rem;">
+            <h3 style="font-family:var(--font-serif);font-weight:700;font-size:1.5rem;color:var(--cream);margin-bottom:1rem;">Local Businesses Make Recovery Possible</h3>
+            <p style="font-size:1rem;color:var(--muted);line-height:1.7;margin-bottom:1rem;">Businesses throughout Deer Park and the Greater Houston area play an important role in helping men rebuild their lives.</p>
+            <p style="font-size:1rem;color:var(--muted);line-height:1.7;">Corporate sponsorships, in-kind donations, volunteer days, and employment opportunities give men in recovery the chance to regain stability, purpose, and confidence while strengthening the local community.</p>
+        </div>
+        <div style="padding:2rem;background:#121814;border:1px solid #233127;border-radius:1.5rem;">
+            <h3 style="font-family:var(--font-serif);font-weight:700;font-size:1.5rem;color:var(--cream);margin-bottom:1rem;">Recovery Changes More Than One Life</h3>
+            <p style="font-size:1rem;color:var(--muted);line-height:1.7;margin-bottom:1rem;">When one person recovers, the impact extends far beyond the individual.</p>
+            <ul style="list-style:none;padding:0;margin:0 0 1rem 0;display:flex;flex-direction:column;gap:.5rem;color:var(--cream);">
+                <li>• Families are reunited.</li>
+                <li>• Children regain fathers.</li>
+                <li>• Employers gain dependable workers.</li>
+                <li>• Neighborhoods become stronger.</li>
+                <li>• Communities become healthier.</li>
+            </ul>
+            <p style="font-size:1rem;color:var(--muted);line-height:1.7;">Supporting The Wheelhouse means investing in lasting recovery and helping create opportunities for men determined to build a better future.</p>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="section-title" style="margin-bottom:1.5rem;">Life at The Wheelhouse</h2>
+        <div class="grid grid-3" style="gap:1rem;">
+          ${galleryImages.map(img => `
+            <div style="border-radius:1rem;overflow:hidden;aspect-ratio:1/1;border:1px solid #2B4232;">
+              <img src="gallery/${img}" alt="Wheelhouse Gallery Image" style="width:100%;height:100%;object-fit:cover;transition:transform .3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
       <div style="padding:2.5rem 2rem;border-radius:1.5rem;background:linear-gradient(to right,#172E1E,#121D15);border:1px solid #2F4D37;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1.5rem;">
         <div>
-          <h3 style="font-family:var(--font-serif);font-weight:900;font-size:1.5rem;color:var(--cream);margin-bottom:.5rem;">Want to Volunteer or Sponsor an Event?</h3>
-          <p style="font-size:.875rem;color:var(--muted);max-width:36rem;">We are always looking for volunteers, peer circle facilitators, and community partners to expand our reach.</p>
+          <h3 style="font-family:var(--font-serif);font-weight:900;font-size:1.5rem;color:var(--cream);margin-bottom:.5rem;">Rebuild What Addiction Tried to Destroy</h3>
+          <p style="font-size:.875rem;color:var(--muted);max-width:48rem;">Every act of generosity helps rebuild what addiction tried to destroy. Whether you choose to donate, volunteer, sponsor an event, or simply share our mission, your support gives men the opportunity to find hope, purpose, and lasting recovery.</p>
         </div>
-        <button class="btn btn-copper" onclick="navigate('contact')">Get Involved Today</button>
+        <button class="btn btn-copper" onclick="window.open('https://thewheelhouse.org', '_blank')">Learn More, Volunteer, or Donate</button>
       </div>
     </div>
   </div>`;
