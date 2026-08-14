@@ -843,7 +843,7 @@ function renderWholesalePage() {
         <p style="font-size:1rem;color:var(--muted);line-height:1.7;max-width:48rem;">Partner with a brand that customers respect. We supply barbershops, boutique grocers, gyms, recovery centers, and lifestyle retailers with handcrafted cold-process soap that sells itself.</p>
       </div>
       <div class="grid grid-2" style="gap:1.5rem;">
-        <div class="benefit-card"><span style="color:var(--copper)">${ICONS.package}</span><div class="benefit-title">50% Dealer Pricing Margin</div><p class="benefit-desc">Generous wholesale margins with low minimum order quantities (MOQs) starting at just 50 bars.</p></div>
+        <div class="benefit-card"><span style="color:var(--copper)">${ICONS.package}</span><div class="benefit-title">Dealer Pricing Margins</div><p class="benefit-desc">Generous wholesale margins with low minimum order quantities (MOQs) starting at just 50 bars.</p></div>
 
         <div class="benefit-card"><span style="color:var(--green-lt)">${ICONS.shieldCheck}</span><div class="benefit-title">Co-Branded Impact Marketing</div><p class="benefit-desc">Your store is featured on our dealer locator, highlighting how your business helps fund The Wheelhouse.</p></div>
       </div>
@@ -1046,10 +1046,9 @@ function renderContactPage() {
       </div>
       <div class="contact-grid">
         <div class="contact-info-card">
-          <div><h3 style="font-family:var(--font-serif);font-weight:900;font-size:1.5rem;color:var(--cream);margin-bottom:.75rem;">Direct Contacts</h3><p style="font-size:.75rem;color:#9EB0A1;line-height:1.6;">Soapbriety headquarters and craft facility operate out of Oregon. Orders dispatch within 1-2 business days.</p></div>
+          <div><h3 style="font-family:var(--font-serif);font-weight:900;font-size:1.5rem;color:var(--cream);margin-bottom:.75rem;">Direct Contacts</h3><p style="font-size:.75rem;color:#9EB0A1;line-height:1.6;">Soapbriety headquarters and craft facility operate out of Houston, Texas. Orders dispatch within 1-2 business days.</p></div>
           <div style="display:flex;flex-direction:column;gap:1rem;">
-            <div class="contact-info-item" style="color:var(--green);">${ICONS.mail}<div><span class="contact-info-sublabel">Email Support</span><span style="font-weight:700;color:#D0C9B8;">support@soapbriety.com</span></div></div>
-            <div class="contact-info-item" style="color:var(--copper);">${ICONS.mapPin}<div><span class="contact-info-sublabel">The Wheelhouse Center</span><span style="font-weight:700;color:#D0C9B8;">Downtown Recovery Center, Portland OR</span></div></div>
+            <div class="contact-info-item" style="color:var(--green);">${ICONS.mail}<div><span class="contact-info-sublabel">Email Support</span><span style="font-weight:700;color:#D0C9B8;">soapbriety@gmail.com</span></div></div>
           </div>
           <div style="padding-top:1.5rem;border-top:1px solid #1C261E;">
             <h4 style="font-family:var(--font-serif);font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--cream);margin-bottom:.75rem;">Official Social Accounts</h4>
