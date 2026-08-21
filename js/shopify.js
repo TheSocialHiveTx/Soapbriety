@@ -499,10 +499,7 @@ async function shopifyCartRemoveLine(lineId) {
 // ── Get checkout URL ──
 function shopifyGetCheckoutUrl() {
   if (_shopifyCart && _shopifyCart.checkoutUrl) {
-    // Force checkout to use the myshopify domain instead of the headless frontend domain
-    var url = new URL(_shopifyCart.checkoutUrl);
-    url.hostname = SHOPIFY_CONFIG.domain;
-    return url.toString();
+    return _shopifyCart.checkoutUrl;
   }
   return null;
 }
