@@ -1421,7 +1421,7 @@ function renderApp() {
   if (cartEl) cartEl.innerHTML = renderCartDrawer();
 
   // Keyboard ESC
-  document.onkeydown = (e) => { if (e.key === 'Escape') { closeSearch(); closeProductModal(); closeCart(); } };
+  document.onkeydown = (e) => { if (e.key === 'Escape') { closeSearch(); closeProductModal(); closeCart(); if(typeof closePromoModal === 'function') closePromoModal(); } };
 }
 
 // Boot — async init with Shopify, fallback to static data
@@ -1455,4 +1455,28 @@ function renderApp() {
   }
 
   renderApp();
+  
+  // Show promo modal if applicable
+  setTimeout(showPromoModal, 500);
 })();
+
+ 
+ / /    % %  P r o m o   P o p u p   M o d a l    % %
+ f u n c t i o n   c l o s e P r o m o M o d a l ( )   { 
+     c o n s t   m o d a l   =   d o c u m e n t . g e t E l e m e n t B y I d ( ' p r o m o - m o d a l ' ) ; 
+     i f   ( m o d a l )   { 
+         m o d a l . s t y l e . d i s p l a y   =   ' n o n e ' ; 
+         s e s s i o n S t o r a g e . s e t I t e m ( ' p r o m o _ s e e n ' ,   ' t r u e ' ) ; 
+     } 
+ } 
+ 
+ f u n c t i o n   s h o w P r o m o M o d a l ( )   { 
+     i f   ( ! s e s s i o n S t o r a g e . g e t I t e m ( ' p r o m o _ s e e n ' ) )   { 
+         c o n s t   m o d a l   =   d o c u m e n t . g e t E l e m e n t B y I d ( ' p r o m o - m o d a l ' ) ; 
+         i f   ( m o d a l )   { 
+             m o d a l . s t y l e . d i s p l a y   =   ' f l e x ' ; 
+         } 
+     } 
+ } 
+  
+ 
