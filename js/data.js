@@ -165,6 +165,24 @@ const PRODUCTS = [
     weightOz: 32.0,
     images: ['https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=1000&q=80','https://images.unsplash.com/photo-1546554137-f86b9593a222?auto=format&fit=crop&w=1000&q=80'],
     inStock: true
+  },
+  {
+    id: 'halloween-bundle',
+    name: 'THE HALLOWEEN RECOVERY BUNDLE',
+    subtitle: 'Limited Autumn 3-Bar Special + Cedar Soap Saver',
+    price: 45.00, rating: 5.0, reviewCount: 94,
+    category: 'Limited Releases',
+    tags: ['Halloween','Limited Edition','Seasonal','Gift Set'],
+    scentProfile: { top: ['Spiced Pumpkin','Smoked Cinnamon'], heart: ['Clove Bud & Bourbon Oak'], base: ['Activated Charcoal Earth'], intensity: 'Bold' },
+    ingredients: ['Day One Activated Charcoal Bar','Solstice Ember Spiced Cedar Bar','Wheelhouse Reserve Goat Milk Bar','Handcrafted Cedarwood Soap Saver Tray'],
+    skinBenefits: ['Charcoal detox cleanses autumn impurities','Warming spice aromatherapy for cold weather','Deep hydration with raw goat milk and honey'],
+    impactHours: 5.5,
+    description: 'Our exclusive Halloween Limited Edition Bundle! Packed with deep detox charcoal, smoked cedar spice, and rich bourbon oak bars paired with our solid cedarwood soap tray.',
+    storySnippet: 'Purchases help fund community support circles and outreach at The Wheelhouse.',
+    directions: 'Lather with warm water for a bold, autumn-inspired wash ritual.',
+    weightOz: 18.0,
+    images: ['images/promo-popup.jpg','gallery/3ada57e8-5227-4e4d-9ec3-ce7070a86040.jpg'],
+    isLimited: true, isBestSeller: true, inStock: true
   }
 ];
 

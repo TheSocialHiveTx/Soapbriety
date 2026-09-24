@@ -206,6 +206,8 @@ function renderNavbar() {
     <span class="free-ship">${ICONS.truck} FREE US SHIPPING $45+</span>
     <span style="color:#2A3E31">•</span>
     <span style="color:#F5F2EB">Every Bar Helps Support <strong>The Wheelhouse</strong></span>
+    <span style="color:#2A3E31">•</span>
+    <button style="background:var(--copper);color:#0E1210;font-weight:700;font-size:.7rem;padding:.2rem .66rem;border-radius:999px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:.25rem;text-transform:uppercase;" onclick="openHalloweenBundle()">🎃 Halloween Bundle</button>
   </div>
   <div class="navbar-inner">
     <div class="nav-side nav-left">
@@ -1475,5 +1477,22 @@ function showPromoModal() {
     if (modal) {
       modal.style.display = 'flex';
     }
+  }
+}
+
+function openHalloweenBundle() {
+  closePromoModal();
+  var prod = (typeof SHOP_PRODUCTS !== 'undefined' && SHOP_PRODUCTS.length) ? SHOP_PRODUCTS.find(function(p) {
+    return p.id === 'halloween-bundle' || p.handle === 'halloween-bundle' || (p.title && p.title.toLowerCase().includes('halloween'));
+  }) : null;
+
+  if (!prod && typeof PRODUCTS !== 'undefined') {
+    prod = PRODUCTS.find(function(p) { return p.id === 'halloween-bundle' || (p.name && p.name.toLowerCase().includes('halloween')); });
+  }
+
+  if (prod) {
+    openQuickView(prod.handle || prod.id);
+  } else {
+    navigate('shop');
   }
 }
