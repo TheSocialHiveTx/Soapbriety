@@ -1245,13 +1245,70 @@ let modalAdded = false;
 let modalImg = 0;
 let modalSelectedVariant = null;
 
+function normalizeProductItem(p) {
+  if (!p) return null;
+
+  var title = p.title || p.name || 'Product';
+  var handle = p.handle || p.id;
+  var price = typeof p.price === 'number' ? p.price : parseFloat(p.price || 0);
+  var compareAt = p.compareAtPrice || null;
+  var currency = p.currencyCode || 'USD';
+  var inStock = p.availableForSale !== undefined ? p.availableForSale : (p.inStock !== false);
+  var productType = p.productType || p.category || '';
+  var descHtml = p.descriptionHtml || p.description || '';
+  var images = (p.images && p.images.length) ? p.images : (p.featuredImage ? [p.featuredImage] : []);
+
+  var defaultVarId = p.defaultVariantId || (p.variants && p.variants[0] ? p.variants[0].id : p.id);
+
+  var variants = (p.variants && p.variants.length) ? p.variants : [
+    {
+      id: defaultVarId,
+      title: title,
+      price: price,
+      compareAtPrice: compareAt,
+      currencyCode: currency,
+      availableForSale: inStock
+    }
+  ];
+
+  return {
+    id: p.id,
+    handle: handle,
+    title: title,
+    name: title,
+    subtitle: p.subtitle || '',
+    price: price,
+    compareAtPrice: compareAt,
+    currencyCode: currency,
+    availableForSale: inStock,
+    productType: productType,
+    tags: p.tags || [],
+    description: p.description || '',
+    descriptionHtml: descHtml,
+    images: images,
+    defaultVariantId: defaultVarId,
+    variants: variants
+  };
+}
+
 function openQuickView(handleOrId) {
-  var product = SHOP_PRODUCTS.find(function(p) { return p.handle === handleOrId || p.id === handleOrId; });
+  var product = (typeof SHOP_PRODUCTS !== 'undefined' && SHOP_PRODUCTS.length) ? SHOP_PRODUCTS.find(function(p) { return p.handle === handleOrId || p.id === handleOrId; }) : null;
+
+  if (!product && typeof PRODUCTS !== 'undefined') {
+    product = PRODUCTS.find(function(p) { return p.handle === handleOrId || p.id === handleOrId; });
+  }
+
+  if (!product && (handleOrId === 'halloween-bundle' || handleOrId.includes('halloween'))) {
+    product = (typeof PRODUCTS !== 'undefined') ? PRODUCTS.find(function(p) { return p.id === 'halloween-bundle'; }) : null;
+  }
+
   if (!product) return;
-  state.quickViewProduct = product;
+
+  var norm = normalizeProductItem(product);
+  state.quickViewProduct = norm;
   modalAdded = false;
   modalImg = 0;
-  modalSelectedVariant = product.variants[0] || null;
+  modalSelectedVariant = norm.variants[0] || null;
   renderProductModal();
 }
 
@@ -1445,14 +1502,22 @@ function renderApp() {
     var products = await initShopify();
     if (products && products.length > 0) {
       SHOP_PRODUCTS = products;
-      console.info('[Soapbriety] Loaded ' + products.length + ' products from Shopify.');
+      if (typeof PRODUCTS !== 'undefined') {
+        PRODUCTS.forEach(function(sp) {
+          var exists = SHOP_PRODUCTS.some(function(p) { return p.id === sp.id || p.handle === sp.id; });
+          if (!exists) {
+            SHOP_PRODUCTS.push(normalizeProductItem(sp));
+          }
+        });
+      }
+      console.info('[Soapbriety] Loaded ' + products.length + ' products from Shopify (total combined: ' + SHOP_PRODUCTS.length + ').');
     } else {
       // Shopify returned no products — use static fallback
-      SHOP_PRODUCTS = (typeof PRODUCTS !== 'undefined') ? PRODUCTS : [];
+      SHOP_PRODUCTS = (typeof PRODUCTS !== 'undefined') ? PRODUCTS.map(normalizeProductItem) : [];
       console.info('[Soapbriety] No Shopify products found; using static data (' + SHOP_PRODUCTS.length + ' products).');
     }
   } catch(err) {
-    SHOP_PRODUCTS = (typeof PRODUCTS !== 'undefined') ? PRODUCTS : [];
+    SHOP_PRODUCTS = (typeof PRODUCTS !== 'undefined') ? PRODUCTS.map(normalizeProductItem) : [];
     console.warn('[Soapbriety] Shopify unavailable; using static fallback (' + SHOP_PRODUCTS.length + ' products).');
   }
 
