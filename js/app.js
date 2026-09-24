@@ -205,7 +205,7 @@ function renderNavbar() {
   <div class="announce-bar">
     <span class="free-ship">${ICONS.truck} FREE US SHIPPING $45+</span>
     <span style="color:#2A3E31">•</span>
-    <span style="color:#F5F2EB">Every Bar Funds Recovery at <strong>The Wheelhouse</strong></span>
+    <span style="color:#F5F2EB">Every Bar Helps Support <strong>The Wheelhouse</strong></span>
   </div>
   <div class="navbar-inner">
     <div class="nav-side nav-left">
@@ -337,7 +337,7 @@ function renderHomePage() {
       </div>
       <div class="hero-pillars">
         <div class="pillar">${ICONS.checkCircle} <span style="color:var(--green)"></span>100% Cold-Process Craft</div>
-        <div class="pillar">${ICONS.heartHandshake} <span style="color:var(--copper)"></span>Funds The Wheelhouse</div>
+        <div class="pillar">${ICONS.heartHandshake} <span style="color:var(--copper)"></span>Supports The Wheelhouse</div>
         <div class="pillar">${ICONS.shieldCheck} <span style="color:var(--green-lt)"></span>No Synthetic Detergents</div>
         <div class="pillar">${ICONS.sparkles}Free US Shipping $45+</div>
       </div>
@@ -361,7 +361,7 @@ function renderHomePage() {
             <h2 style="font-family:var(--font-serif);font-weight:900;font-size:clamp(1.5rem,4vw,3rem);color:var(--cream);line-height:1.1;">The Soap Is Not The Product. <br><span style="color:var(--green)">Hope Is.</span></h2>
             <div style="display:flex;flex-direction:column;gap:1rem;font-size:.875rem;color:var(--muted);line-height:1.7;">
               <p>On <strong style="color:var(--cream)">April 20, 2023</strong>, DJ made the life-changing decision to get clean and rebuild his life from the ground up. Soapbriety was born directly from that moment of total surrender and rebirth.</p>
-              <p>Every handcrafted bar symbolizes washing away yesterday's mistakes and choosing to walk forward with discipline. Profits directly fund <strong style="color:var(--cream)">The Wheelhouse</strong>—sponsoring peer recovery circles, hot meals, hygiene kits, and community outreach.</p>
+              <p>Every handcrafted bar symbolizes washing away yesterday's mistakes and choosing to walk forward with discipline. Every bar helps <strong style="color:var(--cream)">The Wheelhouse</strong>—with donations going toward peer recovery circles, hot meals, hygiene kits, and community outreach.</p>
             </div>
             <div class="why-quote">"We don't just sell soap. We provide a daily physical reminder at the sink that you can start fresh anytime."</div>
             <div style="display:flex;flex-wrap:wrap;gap:1rem;padding-top:.5rem;">
@@ -551,7 +551,7 @@ function renderShopPage() {
       <div style="border-radius:1.5rem;background:linear-gradient(to right,#14261B,#0E1611,#1C1510);border:1px solid #273A2D;padding:3rem 2rem;box-shadow:0 25px 50px rgba(0,0,0,.5);">
         <div class="badge-pill badge-green" style="display:inline-flex;">${ICONS.sparkles} 100% HANDCRAFTED COLD-PROCESS SOAP</div>
         <h1 style="font-family:var(--font-serif);font-weight:900;font-size:clamp(1.875rem,6vw,3rem);color:var(--cream);margin:.75rem 0 .5rem;">The Soapbriety Catalog</h1>
-        <p style="font-size:.875rem;color:var(--muted);line-height:1.7;max-width:36rem;">Every bar is cured for 42 days, poured with raw botanicals, and directly funds recovery programs at The Wheelhouse.</p>
+        <p style="font-size:.875rem;color:var(--muted);line-height:1.7;max-width:36rem;">Every bar is cured for 42 days, poured with raw botanicals, and helps support recovery programs at The Wheelhouse.</p>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:1rem;">
@@ -816,7 +816,7 @@ function renderImpactPage() {
       </div>
       <div class="grid grid-4" style="gap:1.5rem;">
         <div style="padding:1.5rem;border-radius:1rem;background:#121814;border:1px solid #233127;text-align:center;"><div style="font-size:2.25rem;font-family:var(--font-mono);font-weight:900;color:var(--green);">${IMPACT_STATS.barsSold.toLocaleString()}+</div><div style="font-size:.75rem;font-family:var(--font-mono);font-weight:700;color:#9EB0A1;text-transform:uppercase;margin-top:.5rem;">Bars Sold Nationwide</div></div>
-        <div style="padding:1.5rem;border-radius:1rem;background:#121814;border:1px solid #233127;text-align:center;"><div style="font-size:2.25rem;font-family:var(--font-mono);font-weight:900;color:var(--copper);">$${IMPACT_STATS.moneyDonated.toLocaleString()}+</div><div style="font-size:.75rem;font-family:var(--font-mono);font-weight:700;color:#9EB0A1;text-transform:uppercase;margin-top:.5rem;">Direct Wheelhouse Funding</div></div>
+        <div style="padding:1.5rem;border-radius:1rem;background:#121814;border:1px solid #233127;text-align:center;"><div style="font-size:2.25rem;font-family:var(--font-mono);font-weight:900;color:var(--copper);">$${IMPACT_STATS.moneyDonated.toLocaleString()}+</div><div style="font-size:.75rem;font-family:var(--font-mono);font-weight:700;color:#9EB0A1;text-transform:uppercase;margin-top:.5rem;">Donated to The Wheelhouse</div></div>
         <div style="padding:1.5rem;border-radius:1rem;background:#121814;border:1px solid #233127;text-align:center;"><div style="font-size:2.25rem;font-family:var(--font-mono);font-weight:900;color:var(--green-lt);">${IMPACT_STATS.eventsFunded}+</div><div style="font-size:.75rem;font-family:var(--font-mono);font-weight:700;color:#9EB0A1;text-transform:uppercase;margin-top:.5rem;">Peer Recovery Events</div></div>
         <div style="padding:1.5rem;border-radius:1rem;background:#121814;border:1px solid #233127;text-align:center;"><div style="font-size:2.25rem;font-family:var(--font-mono);font-weight:900;color:var(--cream);">${IMPACT_STATS.volunteerHours.toLocaleString()}+</div><div style="font-size:.75rem;font-family:var(--font-mono);font-weight:700;color:#9EB0A1;text-transform:uppercase;margin-top:.5rem;">Volunteer Hours</div></div>
       </div>
